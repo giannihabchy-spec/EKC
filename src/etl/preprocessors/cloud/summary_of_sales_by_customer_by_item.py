@@ -7,7 +7,7 @@ from etl.utils import make_columns_numeric
 
 def preprocess(path):
     data = read(path)
-    data = keep_cols_by_index(data,[0,1,2,7])
+    data = keep_cols_by_index(data,[0,1,2,6])
     data.columns = ['product code', 'product description', 'qty', 'sales revenue']
     id = data[data['product code'] == 'Product Code'].index[0] # Keep only the rows after the first Header
     data = data.iloc[id:].copy()

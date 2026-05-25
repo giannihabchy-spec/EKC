@@ -1,26 +1,6 @@
 from pathlib import Path
 import pandas as pd
 
-def concat_folder_files(folder_path, preprocessing_func, output_path="RESULT.xlsx"):
-    folder = Path(folder_path)
-
-    all_dfs = []
-
-    for file_path in folder.iterdir():
-        if file_path.is_file(excel):
-            df = preprocessing_func(file_path)
-            all_dfs.append(df)
-
-    combined_df = pd.concat(all_dfs, ignore_index=True) 
-    # sort ascending by cols year then month
-
-    combined_df.to_csv(output_path, index=False)
-
-    return combined_df
-
-
-    from pathlib import Path
-
 
 def concat_files(folder_path, preprocessing_func):
     folder = Path(folder_path)

@@ -1,36 +1,12 @@
-import os
 import pandas as pd
 import streamlit as st
-from pathlib import Path
-import sys
-
-
-def _ensure_supa_env_from_secrets():
-    # Bridge app secrets to the legacy env-based supa package.
-    # secret_key = key name in secrets.toml, env_key = what db.py reads via os.getenv()
-    mapping = {
-        "SUPABASE_URL": "url",
-        "SUPABASE_KEY": "key",
-        "host":         "host",
-        "name":         "dbname",   # secrets uses "name", psycopg2 expects "dbname"
-        "user":         "user",
-        "password":     "password",
-        "port":         "port",
-    }
-    for secret_key, env_key in mapping.items():
-        if os.getenv(env_key):
-            continue
-        val = st.secrets.get(secret_key)
-        if val:
-            os.environ[env_key] = str(val)
-###############################################################################################################
+from supa.db import _ensure_supa_env_from_secrets
 
 st.set_page_config(
     page_title="Push to Database",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-
 
 _ensure_supa_env_from_secrets()
 

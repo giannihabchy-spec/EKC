@@ -166,7 +166,3 @@ def push_sheets(sheets: dict, sheet_config: dict, conn):
             ),
             "details": {"loaded": loaded, "empty": empty_sheets, "error": str(e)},
         }
-    
-
-
-

@@ -229,3 +229,25 @@ def clean_numeric_values(dfs_dict, tol=0.001, max_decimals=5):
             data[col] = data[col].apply(fix_value)
     
     return dfs_dict
+
+
+def adjust_configs(sheet_config):
+
+    config = {
+        key: value
+        for key, value in sheet_config.items()
+        if key in ["Sales", "Purchase", "W.Inv", "W.Sal"]
+    }
+
+    for sheet_name, conf in config.items():
+        conf['expected_columns'].append('quick_variance')
+
+    return config
+
+
+def add_quick_variance(sheets_dict):
+
+    for df in sheets_dict.values():
+        df['quick_variance'] = 1
+
+    return sheets_dict

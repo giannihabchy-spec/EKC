@@ -1,4 +1,129 @@
+import pandas as pd
+import streamlit as st
 import re
+
+
+def validate_client_name(real_client, entered_client):
+
+    real_client_clean = str(real_client).strip() if real_client is not None else ""
+    entered_client_clean = str(entered_client).strip() if entered_client is not None else ""
+
+    if real_client_clean == entered_client_clean:
+        msg = "Client name matches the file."
+
+        result = {
+            "status": "ok",
+            "message": msg
+        }
+        return result
+
+    msg = (
+        f"The client name entered '{entered_client}' "
+        f"is different from the one in the file '{real_client}'."
+    )
+
+    result = {
+        "status": "error",
+        "message": msg,
+    }
+    return result
+
+
+def validate_required_columns(sheets_dict, sheet_config):
+
+    message = []
+
+    for sheet_name, df in sheets_dict.items():
+        expected_columns = sheet_config[sheet_name]["expected_columns"]
+        missing_columns = [col for col in expected_columns if col not in df.columns]
+
+        if missing_columns:
+            missing_str = ", ".join(missing_columns)
+            message.append(f"Sheet {sheet_name} is missing column(s): {missing_str}")
+
+
+    if message:
+        return {
+            "status": "error",
+            "message": "  \n  \n".join(message)
+        }    
+        
+    return {
+        "status": "ok",
+        "message": "All required columns exist in all sheets."
+    }
+
+
+def validate_report_period(sheets_dict, sheet_config, report_date):
+    errors = []
+
+    report_period = pd.to_datetime(report_date, errors="coerce").to_period("M")
+
+    if pd.isna(report_period):
+        return {
+            "status": "error",
+            "message": "Invalid Report Date",
+        }
+
+    total_bad = 0
+
+    for sheet_name, df in sheets_dict.items():
+        date_col = sheet_config[sheet_name].get("date_column")
+
+        if not date_col:
+            continue
+
+        if date_col not in df.columns:
+            errors.append(f"⚠️ {sheet_name}: missing date column '{date_col}'")
+            continue
+
+        sheet_dates = df[date_col]
+        expected_period = report_period - 1 if sheet_name == "Beg" else report_period
+
+        bad_mask = sheet_dates.isna() | (sheet_dates != expected_period)
+        bad_count = int(bad_mask.sum())
+
+        if bad_count > 0:
+            total_bad += bad_count
+            errors.append(
+                f"⚠️ {sheet_name}: {bad_count} row(s) outside reporting period {expected_period}"
+            )
+
+    if errors:
+        return {
+            "status": "error",
+            "message": "  \n".join(errors),
+        }
+
+    return {
+        "status": "ok",
+        "message": "All sheet dates match the selected reporting period.",
+    }
+
+
+def handle_status(result, log_func=st.write):
+
+    status = result.get("status")
+    message = result.get("message")
+
+    if message:
+        log_func(message)
+
+    if status == "error":
+        return {
+            "action": "stop"
+        }
+
+    if status == "warning":
+        return {
+            "action": "choice",
+            "options": ["continue", "stop"],
+            "message": message
+        }
+
+    return {
+        "action": "continue"
+    }
 
 
 def safe_ident(name):

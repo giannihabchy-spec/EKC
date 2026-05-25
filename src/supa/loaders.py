@@ -1,7 +1,69 @@
 import pandas as pd
-from supa.modeling import clean_value
+from supa.modeling import normalize_column_name, clean_value
+import numpy as np
 from psycopg2.extras import execute_values
 from psycopg2 import sql as psql
+
+
+def load_sheet(file, sheet_name):
+    df = pd.read_excel(file, sheet_name=sheet_name)
+    df.columns = [normalize_column_name(c) for c in df.columns]
+    return df
+
+
+def extract_sheets_and_client(file_path, sheet_config):
+
+    with pd.ExcelFile(file_path) as xls:
+
+        errors = []
+
+        common_names = [s for s in xls.sheet_names if s in sheet_config]
+        sheets_dict = {
+            name: pd.read_excel(xls, sheet_name=name)
+            for name in common_names
+        }
+        
+        info_df = pd.read_excel(xls, sheet_name="Info")
+        row = info_df.loc[0]
+
+        real_client = row.get('Restaurant Name')
+        cur = row.get('Currency')
+        if isinstance(cur,str):
+            currency = cur.strip().lower()
+        else:
+            currency = np.nan
+        rate = row.get('Rate')
+
+        info = {
+            "status": 'ok',
+            "common_sheet_names": common_names,
+            "missing_in_workbook": [s for s in sheet_config if s not in xls.sheet_names],
+            "extra_in_workbook": [s for s in xls.sheet_names if s not in sheet_config],
+            "msg": "All info extracted"
+        }
+
+        if info['missing_in_workbook']:
+            missing_str = (", ".join(info['missing_in_workbook']))
+            errors.append('Missing sheets: ' + missing_str)
+
+        if pd.isna(real_client):
+            errors.append('Invalid client name')
+
+        if pd.isna(currency):
+            errors.append('Invalid currency')
+
+        if pd.isna(rate):
+            errors.append('Invalid rate')
+        elif rate == 1:
+            errors.append('⚠️ Rate = 1')
+
+        if errors:
+            info['status'] = 'error'
+            info['msg'] = '  \n'.join(errors)
+
+            return sheets_dict, real_client, currency, rate, info
+        
+        return sheets_dict, real_client, currency, rate, info
 
 
 def push_sheets(sheets: dict, sheet_config: dict, conn):
@@ -104,3 +166,7 @@ def push_sheets(sheets: dict, sheet_config: dict, conn):
             ),
             "details": {"loaded": loaded, "empty": empty_sheets, "error": str(e)},
         }
+    
+
+
+

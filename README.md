@@ -9,5 +9,4 @@ folder containg raw files + 'Auto Calc.xlsx'
 (streamlit) `uv run streamlit run scripts/gui.py`
 <br><br>
 ## Create Shortcut:
-Adjust gui.py path in run_gui.vbs  
-Create shortcut for run_gui.vbs
+Create shortcuts .vbs files

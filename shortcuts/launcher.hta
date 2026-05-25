@@ -1,0 +1,103 @@
+<html>
+<head>
+  <title>EKC Tools</title>
+  <HTA:APPLICATION
+    id="ekcLauncher"
+    applicationname="EKC Tools"
+    border="dialog"
+    borderstyle="normal"
+    caption="yes"
+    maximize="no"
+    minimize="no"
+    sysmenu="no"
+    scroll="no"
+    singleInstance="yes"
+    showInTaskbar="yes"
+  />
+  <style>
+    body {
+      font-family: Segoe UI, Tahoma, sans-serif;
+      background: #0e1117;
+      color: #fafafa;
+      margin: 0;
+      padding: 20px 24px 16px;
+    }
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 4px;
+    }
+    p {
+      margin: 0 0 16px;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+    .apps {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    button {
+      text-align: left;
+      padding: 12px 14px;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      background: #161b22;
+      color: #fafafa;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #21262d;
+      border-color: #58a6ff;
+    }
+    .name { font-weight: 600; display: block; }
+    .desc { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+    .cancel {
+      margin-top: 14px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .cancel:hover { color: #9ca3af; }
+  </style>
+  <script type="text/javascript">
+    function shortcutsDir() {
+      var path = unescape(document.location.pathname);
+      if (path.charAt(0) === "/") path = path.substring(1);
+      path = path.replace(/\//g, "\\");
+      var fso = new ActiveXObject("Scripting.FileSystemObject");
+      return fso.GetParentFolderName(path);
+    }
+
+    function launch(scriptFile) {
+      var fso = new ActiveXObject("Scripting.FileSystemObject");
+      var dir = shortcutsDir();
+      var bat = fso.BuildPath(dir, "run_app.bat");
+      var shell = new ActiveXObject("WScript.Shell");
+      shell.Run('"' + bat + '" ' + scriptFile, 0, false);
+      window.close();
+    }
+  </script>
+</head>
+<body>
+  <h1>EKC Tools</h1>
+  <p>Choose an app to open in the browser.</p>
+  <div class="apps">
+    <button onclick="launch('gui.py')">
+      <span class="name">Auto Calc Pipeline</span>
+      <span class="desc">Run the ETL / Auto Calc workflow</span>
+    </button>
+    <button onclick="launch('recipes_gui.py')">
+      <span class="name">Recipes</span>
+      <span class="desc">Compare and process recipe files</span>
+    </button>
+    <button onclick="launch('push_to_database.py')">
+      <span class="name">Push to Database</span>
+      <span class="desc">Upload data to Supabase</span>
+    </button>
+  </div>
+  <div class="cancel" onclick="window.close()">Cancel</div>
+</body>
+</html>

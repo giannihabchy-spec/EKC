@@ -11,7 +11,7 @@ st.set_page_config(
 
 sys.path.append(str(Path(__file__).parent / "src"))
 
-from etl.config import get_jobs
+from etl.config import get_jobs, no_nulls
 from etl.orchestrator import clean_folder, cleaner_by_code
 from etl.merger import merge
 from etl.strip_all import strip_all
@@ -19,7 +19,7 @@ from etl.special_characters import special_char
 from etl.saver import save_cleaned_data
 from etl.reset_view import reset_workbook_view
 from etl.prev_unit_cost import uc_pre_month
-from etl.clearer import clear_all
+from etl.clearer import clear_all, clear_junk_rows
 from etl.clear_sheets import clear_sheets
 from etl.writer import write_master
 from etl.validators import check_sheets_exist, get_missing_columns
@@ -124,13 +124,7 @@ if st.button("▶ Run Pipeline", type="primary", use_container_width=True):
                     jobs = ex_res['jobs']
                     cleaned = ex_res['cleaned_dict']
                     st.write("Completed")
-                    status_ex.update(label="Extracting sheets", state="complete", expanded=True)######## honnnn
-
-                # with st.status("test", expanded=True) as status_test:
-                #     save_cleaned_data(cleaned, base_folder, 'testtt.xlsx')
-                #     st.write(jobs)
-                #     status_test.update(label="test", state="complete", expanded=True)
-                #     st.stop()
+                    status_ex.update(label="Extracting sheets", state="complete", expanded=True)
 
 
 
@@ -180,6 +174,12 @@ if st.button("▶ Run Pipeline", type="primary", use_container_width=True):
                 with st.status("Writing...", expanded=True) as status_write:
                     write_master(str(master_path), cleaned, jobs, suppress_warnings=True, log_func=st.write)
                     status_write.update(label="Writing", state="complete", expanded=True)
-                    st.write("Loaded all available data")           
+                    st.write("Loaded all available data")          
+
+
+            # with st.status("Finishing...", expanded=True) as status_fin:
+            #     clear_junk_rows(str(master_path), no_nulls)
+            #     status_fin.update(label="Finishing", state="complete", expanded=True)
+            #     st.write('Done')
 
             st.success("✅ Successfully updated 'Auto Calc.xlsx'")

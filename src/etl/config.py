@@ -235,6 +235,32 @@ JOBS_LOCAL = [
 ]
 
 
+
+no_nulls = {
+    'Rep.M.Eng.': ['menu_items'],
+    'Rep.M.Mix': ['menu_items'],
+    'Rep.Theo': ['menu_items'],
+    'SP': ['menu_items'],
+    'Rep.Variance': ['products'],
+    'Sales': ['description'],
+    'Cogs': ['month'],
+    'Disc. Cat.': ['category'],
+    'Discount': ['description'],
+    'Beg': ['product_description'],
+    'Purchase': ['raw_materials'],
+    'PRD': ['production_list'],
+    'IN OUT': ['product'],
+    'W.Inv': ['product_description'],
+    'W.Sal': ['product'],
+    'Ending': ['product_description'],
+    'UC PRE MONTH': ['product_description'],
+    'Unit Cost': ['product_description'],
+    'Recipes': ['menu_items'],
+    'sub recipes': ['production_name'],
+}
+
+
+
 def get_jobs(source: str) -> list[dict]:
     if source == "cloud":
         return JOBS_CLOUD

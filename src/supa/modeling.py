@@ -251,3 +251,17 @@ def add_quick_variance(sheets_dict):
         df['quick_variance'] = 1
 
     return sheets_dict
+
+
+
+def increment_month_in_sheets(sheet_dict):
+    updated_sheets = {}
+
+    for sheet_name, df in sheet_dict.items():
+        df_copy = df.copy()
+
+        df_copy["month"] = df_copy["month"] + 1
+
+        updated_sheets[sheet_name] = df_copy
+
+    return updated_sheets

@@ -23,6 +23,7 @@ from supa.modeling import (
     clean_numeric_values,
     adjust_configs,
     add_quick_variance,
+    increment_month_in_sheets,
 )
 from supa.validators import (
     validate_required_columns,
@@ -109,6 +110,9 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             st.stop()
         sheets_dict = date_conv["data"]
         st.write(date_conv["message"])
+
+        sheets_dict = increment_month_in_sheets(sheets_dict)
+
         form_st.update(label="Formatting Data", state="complete", expanded=True)
 
     with st.status("Validating Client and Date...", expanded=True) as val_st:

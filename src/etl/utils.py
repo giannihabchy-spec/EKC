@@ -128,3 +128,8 @@ def clean_check(data,cols):
         data[c] = pd.to_numeric(data[c].astype(str).str.replace(',', '', regex=False), errors='coerce').astype('Int64')
 
     return data
+
+
+def get_omega_client_name(data, loc: tuple[int, int] = (0, 0)):
+    row, col = loc
+    return data.iloc[row, col]

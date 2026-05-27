@@ -59,14 +59,14 @@ def _is_requisition_summary_ib_filename(filename: str) -> bool:
     return re.fullmatch(r"REP_I_0087_IB(?: \(\d+\))?\.xlsx", filename) is not None
 
 
-def clean_folder(folder: str | Path, source: Literal["cloud", "local"] = "cloud", log_func=print) -> dict[str, object]:
+def clean_folder(folder: str | Path, source: Literal["cloud", "local"] = "cloud", log_func=print, patterns: dict  = cleaner_by_code) -> dict[str, object]:
     folder = Path(folder)
     if not folder.exists() or not folder.is_dir():
         raise NotADirectoryError(f"Folder not found or not a directory: {folder}")
-    if source not in cleaner_by_code:
+    if source not in patterns:
         raise ValueError(f"source must be 'cloud' or 'local', got {source!r}")
 
-    cleaners = cleaner_by_code[source]
+    cleaners = patterns[source]
     cleaned: dict[str, object] = {}
     ib_files = [
         p

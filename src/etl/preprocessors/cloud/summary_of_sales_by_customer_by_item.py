@@ -4,10 +4,14 @@ from etl.utils import keep_cols_by_index
 from etl.utils import remove_repeated_headers
 from etl.utils import drop_na_by_name
 from etl.utils import make_columns_numeric
-from etl.utils import drop_rows
+from etl.utils import get_omega_client_name
 
-def preprocess(path):
+def preprocess(path, omega_loc: bool = False):
     data = read(path)
+
+    if omega_loc:
+        omega_client = get_omega_client_name(data)
+
     data = keep_cols_by_index(data,[0,1,2,6])
     data.columns = ['product code', 'product description', 'qty', 'sales revenue']
     id = data[data['product code'] == 'Product Code'].index[0] # Keep only the rows after the first Header
@@ -41,4 +45,10 @@ def preprocess(path):
     data = make_columns_numeric(data,['qty','sales revenue'])
     data['remark'] = 'sales'
     data['original remarks'] = pd.NA
+
+    if omega_loc:
+        data['omega client name'] = omega_client
+        cols = ['omega client name', 'product description', 'qty']
+        data = data[cols]
+
     return data

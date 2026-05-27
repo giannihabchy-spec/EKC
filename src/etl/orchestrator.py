@@ -59,7 +59,13 @@ def _is_requisition_summary_ib_filename(filename: str) -> bool:
     return re.fullmatch(r"REP_I_0087_IB(?: \(\d+\))?\.xlsx", filename) is not None
 
 
-def clean_folder(folder: str | Path, source: Literal["cloud", "local"] = "cloud", log_func=print, patterns: dict  = cleaner_by_code) -> dict[str, object]:
+def clean_folder(
+        folder: str | Path, 
+        source: Literal["cloud", "local"] = "cloud", 
+        log_func=print, 
+        patterns: dict  = cleaner_by_code,
+        quick_variance: bool = False,
+        ) -> dict[str, object]:
     folder = Path(folder)
     if not folder.exists() or not folder.is_dir():
         raise NotADirectoryError(f"Folder not found or not a directory: {folder}")
@@ -110,7 +116,11 @@ def clean_folder(folder: str | Path, source: Literal["cloud", "local"] = "cloud"
         output_name, cleaner = entry
 
         try:
-            result = cleaner(str(p))
+            result = (
+                cleaner(str(p), omega_loc=True)
+                if quick_variance
+                else cleaner(str(p))
+            )
             cleaned[output_name] = result
 
             if isinstance(result, pd.DataFrame):

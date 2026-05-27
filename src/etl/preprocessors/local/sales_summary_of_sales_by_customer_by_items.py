@@ -2,9 +2,15 @@ from etl.utils import read
 from etl.utils import keep_cols_by_index
 from etl.utils import make_columns_numeric
 from etl.utils import make_columns_date
+from etl.utils import get_omega_client_name
 
-def preprocess(path):
+
+def preprocess(path, omega_loc: bool = False):
     data = read(path)
+
+    if omega_loc:
+        omega_client = get_omega_client_name(data, (2,0))
+
     data = keep_cols_by_index(data,[0,2,3,7,10])
     data.columns = ['Code', 'Info', 'Desc', 'Qty', 'Amount']
 
@@ -31,4 +37,10 @@ def preprocess(path):
     data = make_columns_date(data,['Date'])
     data['Remark'] = 'sales'
     data.columns = ['product', 'qty','total','customer','location','date','invoice number', 'remarks']
+
+    if omega_loc:
+        data['omega client name'] = omega_client
+        cols = ['omega client name', 'product', 'qty']
+        data = data[cols]
+
     return data

@@ -6,10 +6,15 @@ from etl.utils import drop_rows
 from etl.utils import drop_na_by_name
 from etl.utils import make_columns_date
 from etl.utils import make_columns_numeric
+from etl.utils import get_omega_client_name
 
 
-def preprocess(path):
+def preprocess(path, omega_loc: bool = False):
     data = read(path)
+
+    if omega_loc:
+        omega_client = get_omega_client_name(data, (2,0))
+
     data = keep_cols_by_index(data,[0,2,6,7,10])
     data.columns = ['A','B','C','D','E']
 
@@ -42,6 +47,12 @@ def preprocess(path):
     data = make_columns_date(data,['Purchase Date'])
     data = make_columns_numeric(data,['Total','Qty'])
     data.columns = ['location', 'raw materials','qty','total cost','supplier names','invoice #','purchase date']
+    
+    if omega_loc:
+        data['omega client name'] = omega_client
+        cols = ['omega client name', 'raw materials', 'qty']
+        data = data[cols]
+    
     return data
 
 

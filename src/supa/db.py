@@ -62,9 +62,48 @@ def get_branch_id(branch_name, supabase):
         }
 
 
+def get_branch_omega_name(branch_id, supabase):
+    try:
+        response = (
+            supabase
+            .table("branches")
+            .select("id, omega_name")
+            .eq("id", branch_id)
+            .execute()
+        )
+    except Exception as e:
+        msg = f"⚠️ Failed to fetch client's Omega name: {e}"
+        return {
+            "status": "error",
+            "message": msg,
+            "branch_id": None
+        }
+
+    rows = response.data if response and hasattr(response, "data") else []
+
+    if not rows:
+        msg = f"⚠️ Client was not found in the branches table"
+        return {
+            "status": "error",
+            "message": msg,
+            "branch_id": None
+        }
+
+    if len(rows) > 1:
+        msg = f"⚠️ Multiple Omega names found for the client"
+        return {
+            "status": "error",
+            "message": msg,
+            "branch_id": None
+        }
+
+    return {
+            "status": "ok",
+            "omega_name": rows[0]["omega_name"]
+        }
+
+
 def _ensure_supa_env_from_secrets():
-    # Bridge app secrets to the legacy env-based supa package.
-    # secret_key = key name in secrets.toml, env_key = what db.py reads via os.getenv()
     mapping = {
         "SUPABASE_URL": "url",
         "SUPABASE_KEY": "key",

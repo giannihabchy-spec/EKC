@@ -133,3 +133,14 @@ def clean_check(data,cols):
 def get_omega_client_name(data, loc: tuple[int, int] = (0, 0)):
     row, col = loc
     return data.iloc[row, col]
+
+
+def get_file_date(data, loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
+    row, col = loc
+
+    if source == 'cloud':
+        file_date = pd.to_datetime(data.iloc[row, col].split()[2])
+    else:
+        file_date = data.iloc[row, col]
+
+    return file_date

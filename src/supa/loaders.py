@@ -66,7 +66,7 @@ def extract_sheets_and_client(file_path, sheet_config):
         return sheets_dict, real_client, currency, rate, info
 
 
-def push_sheets(sheets: dict, sheet_config: dict, conn):
+def push_sheets(sheets: dict, sheet_config: dict, conn, quick_variance: bool = False):
     empty_sheets: list[str] = []
     loaded: list[str] = []
 
@@ -99,10 +99,13 @@ def push_sheets(sheets: dict, sheet_config: dict, conn):
                             cols_to_use.append(meta_col)
 
                     missing = [c for c in cols_to_use if c not in df.columns]
-                    if missing:
-                        raise ValueError(
-                            f"Sheet '{sheet_name}' is missing required column(s): {', '.join(missing)}"
-                        )
+                    if quick_variance:
+                        cols_to_use = [c for c in cols_to_use if c in df.columns]
+                    else:
+                        if missing:
+                            raise ValueError(
+                                f"Sheet '{sheet_name}' is missing required column(s): {', '.join(missing)}"
+                            )
                     df = df[cols_to_use]
 
                 rows = df.to_dict(orient="records")

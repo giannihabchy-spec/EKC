@@ -137,7 +137,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             status_ext_info.update(label="Extracting Info", state="error", expanded=True)
             st.stop()
         branch_id = qr_res["branch_id"]
-        # omega_name = get_branch_omega_name(branch_id, supabase)['omega_name'] #######################################
+        omega_name = get_branch_omega_name(branch_id, supabase)['omega_name'] #######################################
         report_date = pd.to_datetime(selected_period)
         jobs = get_jobs(source)
 
@@ -170,12 +170,12 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             st.stop()
         st.write(date_validation['msg'])
 
-        # name_validation = validate_omega_name(cleaned, omega_name) #############################################
-        # if name_validation['status'] != 'ok':
-        #     st.error(name_validation['msg'])
-        #     status_validation.update(label="Validating", state="error", expanded=True)
-        #     st.stop()
-        # st.write(name_validation['msg'])
+        name_validation = validate_omega_name(cleaned, omega_name) #############################################
+        if name_validation['status'] != 'ok':
+            st.error(name_validation['msg'])
+            status_validation.update(label="Validating", state="error", expanded=True)
+            st.stop()
+        st.write(name_validation['msg']) #######################################################################
 
         status_validation.update(label="Validating", state="complete", expanded=True)
 
@@ -214,3 +214,54 @@ if st.button("▶ Run", type="primary", use_container_width=True):
         save_cleaned_data(cleaned, base_folder, 'very cleaned data.xlsx')
         
         form_st.update(label="Formatting Data", state="complete", expanded=True)
+
+    
+    with st.status("Checking existing data...", expanded=True) as exsting_data_st:
+
+        try:
+            conn = get_pg_connection()
+        except Exception as e:
+            st.error(f"❌ Could not connect to the database. Check that `host`, `name`, `user`, `password`, and `port` are set in Streamlit secrets.\n\n`{e}`")
+            exsting_data_st.update(label="Checking existing data", state="error", expanded=True)
+            st.stop()
+        conn.autocommit = False
+        chk_res = find_existing_data(conn, SHEET_CONFIG, branch_id, selected_period)
+
+        if chk_res["status"] != "ok":
+            st.write(chk_res["msg"])
+            if mode != "Overwrite":
+                st.write("Process cancelled because data already exists.")
+                exsting_data_st.update(label="Checking existing data", state="error", expanded=True)
+                conn.close()
+                st.stop()
+
+            st.write("Existing data will be replaced.")
+            with st.status("Deleting existing data...", expanded=True) as del_st:
+                del_res = delete_existing_data(conn, SHEET_CONFIG, branch_id, selected_period, True)
+                if del_res["status"] != "ok":
+                    st.write(del_res["msg"])
+                    del_st.update(label="Deleting existing data", state="error", expanded=True)
+                    conn.close()
+                    st.stop()
+                st.write(del_res["msg"])
+                del_st.update(label="Deleting existing data", state="complete", expanded=True)
+        else:
+            st.write(chk_res["msg"])
+
+        exsting_data_st.update(label="Checking existing data", state="complete", expanded=True)
+
+
+    with st.status("Writing to Database...", expanded=True) as write_st:
+        try:
+            load_res = push_sheets(cleaned, SHEET_CONFIG, conn, True)
+            if load_res["status"] != "ok":
+                st.write(load_res["message"])
+                write_st.update(label="Writing to Database", state="error", expanded=True)
+                st.stop()
+
+            st.write(load_res["message"])
+            write_st.update(label="Writing to Database", state="complete", expanded=True)
+        finally:
+            conn.close()
+
+    st.success(f"Successfully loaded data to database.")

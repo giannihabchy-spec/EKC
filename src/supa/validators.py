@@ -133,7 +133,7 @@ def safe_ident(name):
     return name
 
 
-def find_existing_data(conn, sheet_config, branch_id, report_date):
+def find_existing_data(conn, sheet_config, branch_id, report_date, quick_variance: bool = False):
     conn.rollback()
 
     results = []
@@ -151,16 +151,30 @@ def find_existing_data(conn, sheet_config, branch_id, report_date):
         for table in tables:
             table_name = safe_ident(table)
 
-            cur.execute(
-                f"""
-                select count(*)
-                from {table_name}
-                where branch_id = %s
-                  and report_date >= %s
-                  and report_date < %s
-                """,
-                (branch_id, start_date, end_date)
-            )
+            if quick_variance:
+                cur.execute(
+                    f"""
+                    select count(*)
+                    from {table_name}
+                    where branch_id = %s
+                    and report_date >= %s
+                    and report_date < %s
+                    and quick_variance = 1
+                    """,
+                    (branch_id, start_date, end_date)
+                )
+
+            else:
+                cur.execute(
+                    f"""
+                    select count(*)
+                    from {table_name}
+                    where branch_id = %s
+                    and report_date >= %s
+                    and report_date < %s
+                    """,
+                    (branch_id, start_date, end_date)
+                )
 
             count = cur.fetchone()[0]
 
@@ -179,7 +193,7 @@ def find_existing_data(conn, sheet_config, branch_id, report_date):
         }
 
 
-def delete_existing_data(conn, sheet_config, branch_id, report_date):
+def delete_existing_data(conn, sheet_config, branch_id, report_date, quick_variance: bool = False):
     conn.rollback()
 
     tables = [sht['target_table'] for sht in sheet_config.values()]
@@ -199,15 +213,28 @@ def delete_existing_data(conn, sheet_config, branch_id, report_date):
             for table in tables:
                 table_name = safe_ident(table)
 
-                cur.execute(
-                    f"""
-                    delete from {table_name}
-                    where branch_id = %s
-                      and report_date >= %s
-                      and report_date < %s
-                    """,
-                    (branch_id, start_date, end_date)
-                )
+                if quick_variance:
+                    cur.execute(
+                        f"""
+                        delete from {table_name}
+                        where branch_id = %s
+                        and report_date >= %s
+                        and report_date < %s
+                        and quick_variance = 1
+                        """,
+                        (branch_id, start_date, end_date)
+                    )             
+
+                else:
+                    cur.execute(
+                        f"""
+                        delete from {table_name}
+                        where branch_id = %s
+                        and report_date >= %s
+                        and report_date < %s
+                        """,
+                        (branch_id, start_date, end_date)
+                    )
 
                 if cur.rowcount > 0:
                     deleted_tables.append(f"{table} → {cur.rowcount} row(s) deleted")

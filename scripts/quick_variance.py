@@ -31,7 +31,7 @@ from etl.extract_sheets import extract_sheets
 from etl.quick_variance.orchestrator import adjust_cleaners
 
 from supa.config import SHEET_CONFIG
-from supa.db import get_pg_connection, init_supabase, get_branch_id
+from supa.db import get_pg_connection, init_supabase, get_branch_id, get_branch_omega_name
 from supa.loaders import extract_sheets_and_client, push_sheets
 from supa.streamlit_functions import get_client_list, get_period_options
 from supa.modeling import (
@@ -49,7 +49,8 @@ from supa.validators import (
     find_existing_data,
     delete_existing_data,
     check_duplicates,
-    check_rows
+    check_rows,
+    validate_file_dates,
 )
 
 st.markdown("""
@@ -132,7 +133,10 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             status_ext_info.update(label="Extracting Info", state="error", expanded=True)
             st.stop()
         branch_id = qr_res["branch_id"]
+        # omega_name = get_branch_omega_name(branch_id, supabase)
         report_date = pd.to_datetime(selected_period)
+
+        st.write('Done')
 
         status_ext_info.update(label="Extracting Info", state="complete", expanded=True)
 
@@ -151,3 +155,15 @@ if st.button("▶ Run", type="primary", use_container_width=True):
         save_cleaned_data(cleaned, base_folder)
         st.write("Cleaned data is saved.")
         status_clean.update(label="Cleaning", state="complete", expanded=True)
+
+
+    with st.status("Validating...", expanded=True) as status_validation:
+        date_validation = validate_file_dates(cleaned, report_date)
+        if date_validation['status'] != 'ok':
+            st.error(date_validation['msg'])
+            status_validation.update(label="Validating", state="error", expanded=True)
+            st.stop()
+        st.write(date_validation['msg'])
+
+
+        status_validation.update(label="Validating", state="complete", expanded=True)

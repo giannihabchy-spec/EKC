@@ -100,12 +100,12 @@ def clean_folder(
                 if isinstance(result, pd.DataFrame):
                     nan_cols = result.columns[result.isna().any()].tolist()
                     if nan_cols:
-                        log_func(f"⚠️ NaNs in {output_name}: {nan_cols}")
+                        log_func(f"NaNs in {output_name}: {nan_cols}")
 
                 log_func(f"Cleaned {p.name} -> {output_name}")
 
             except Exception as e:
-                log_func(f"Failed cleaning {p.name} -> {output_name}\n{e}")
+                log_func(f"⚠️ Failed cleaning {p.name} -> {output_name}\n{e}")
 
             continue
 
@@ -126,11 +126,11 @@ def clean_folder(
             if isinstance(result, pd.DataFrame):
                 nan_cols = result.columns[result.isna().any()].tolist()
                 if nan_cols:
-                    log_func(f"⚠️ NaNs in {output_name}: {nan_cols}")
+                    log_func(f"NaNs in {output_name}: {nan_cols}")
 
             log_func(f"Cleaned {p.name} -> {output_name}")
 
         except Exception as e:
-            log_func(f"Failed cleaning {p.name} -> {output_name}\n{e}")
+            log_func(f"⚠️ Failed cleaning {p.name} -> {output_name}\n{e}")
 
     return cleaned

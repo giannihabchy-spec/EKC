@@ -359,3 +359,33 @@ def check_rows(sheets, config):
         "status": "ok",
         "msg": "all good"
     }
+
+
+def validate_file_dates(sheets_dict, selected_date): # for quick Variance
+
+    all_dates = []
+
+    for key, df in sheets_dict.items():
+        file_date = df['file date'].iloc[0]
+        all_dates.append(file_date)
+
+    if len(set(all_dates)) > 1:
+        return {
+            'status': 'error',
+            'msg': 'Files contain multiple dates'
+        }
+    
+    file_date = all_dates[0]
+
+    condition = (file_date.month == selected_date.month) and (file_date.year == selected_date.year)
+
+    if condition:
+        return {
+            'status': 'ok',
+            'msg': 'Date checked'
+        }
+    
+    return {
+        'status': 'error',
+        'msg': 'The file date does not match the selected month and year'
+    }

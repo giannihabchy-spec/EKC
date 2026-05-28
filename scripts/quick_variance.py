@@ -51,6 +51,7 @@ from supa.validators import (
     check_duplicates,
     check_rows,
     validate_file_dates,
+    validate_omega_name,
 )
 
 st.markdown("""
@@ -133,7 +134,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             status_ext_info.update(label="Extracting Info", state="error", expanded=True)
             st.stop()
         branch_id = qr_res["branch_id"]
-        # omega_name = get_branch_omega_name(branch_id, supabase)
+        # omega_name = get_branch_omega_name(branch_id, supabase)['omega_name'] #######################################
         report_date = pd.to_datetime(selected_period)
 
         st.write('Done')
@@ -165,5 +166,14 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             st.stop()
         st.write(date_validation['msg'])
 
+        # name_validation = validate_omega_name(cleaned, omega_name) #############################################
+        # if name_validation['status'] != 'ok':
+        #     st.error(name_validation['msg'])
+        #     status_validation.update(label="Validating", state="error", expanded=True)
+        #     st.stop()
+        # st.write(name_validation['msg'])
+
 
         status_validation.update(label="Validating", state="complete", expanded=True)
+
+

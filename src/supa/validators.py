@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 import re
+from supa.db import get_branch_id, get_branch_omega_name
 
 
 def validate_client_name(real_client, entered_client):
@@ -365,7 +366,7 @@ def validate_file_dates(sheets_dict, selected_date): # for quick Variance
 
     all_dates = []
 
-    for key, df in sheets_dict.items():
+    for df in sheets_dict.values():
         file_date = df['file date'].iloc[0]
         all_dates.append(file_date)
 
@@ -387,5 +388,35 @@ def validate_file_dates(sheets_dict, selected_date): # for quick Variance
     
     return {
         'status': 'error',
-        'msg': 'The file date does not match the selected month and year'
+        'msg': 'The files dates do not match the selected month and year'
+    }
+
+
+
+def validate_omega_name(sheets_dict, selected_name): # for quick Variance
+
+    all_names = []
+
+    for df in sheets_dict.values():
+        omega_name = df['omega name'].iloc[0]
+        all_names.append(omega_name)
+
+    if len(set(all_names)) > 1:
+        return {
+            'status': 'error',
+            'msg': 'Files contain multiple names'
+        }
+    
+    file_name = all_names[0]
+
+    condition = (file_name == selected_name)
+    if condition:
+        return {
+            'status': 'ok',
+            'msg': 'Name checked'
+        }
+    
+    return {
+        'status': 'error',
+        'msg': f"The files name '{file_name}' do not match the selected client's Omega name '{selected_name}'"
     }

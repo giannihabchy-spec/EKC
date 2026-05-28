@@ -4,7 +4,7 @@ from etl.utils import drop_na_by_name
 from etl.utils import remove_repeated_headers
 from etl.utils import make_columns_date
 from etl.utils import make_columns_numeric
-from etl.utils import get_omega_client_name
+from etl.utils import get_omega_client_name, get_file_date
 
 
 def preprocess(path, omega_loc: bool = False):
@@ -12,6 +12,7 @@ def preprocess(path, omega_loc: bool = False):
 
     if omega_loc:
         omega_client = get_omega_client_name(data, (2,0))
+        file_date = get_file_date(data, [11,4], source = 'local')
 
     data = keep_cols_by_index(data,[0,2,5,10])
     data.columns = ['Code','Description','Qty','Total Price']
@@ -47,8 +48,9 @@ def preprocess(path, omega_loc: bool = False):
     data.columns = ['product description','qty','sales revenue','customer','location','date','invoice number','remarks']
     
     if omega_loc:
-        data['omega client name'] = omega_client
-        cols = ['omega client name', 'product description', 'qty']
+        data['omega name'] = omega_client
+        data['file date'] = file_date
+        cols = ['omega name', 'file date', 'product description', 'qty']
         data = data[cols]
     
     return data

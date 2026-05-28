@@ -1,7 +1,7 @@
 from etl.utils import read
 from etl.utils import drop_na_by_name
 from etl.utils import make_columns_numeric
-from etl.utils import get_omega_client_name
+from etl.utils import get_omega_client_name, get_file_date
 
 
 def preprocess(path, omega_loc: bool = False):
@@ -9,6 +9,7 @@ def preprocess(path, omega_loc: bool = False):
 
     if omega_loc:
         omega_client = get_omega_client_name(data)
+        file_date = get_file_date(data, [8,7], source = 'local')
 
     data = data.iloc[11:].copy()
     x = list(data.iloc[0])
@@ -26,8 +27,9 @@ def preprocess(path, omega_loc: bool = False):
     data.columns = ['description', 'qty sold', 'gross sales']
 
     if omega_loc:
-        data['omega client name'] = omega_client
-        cols = ['omega client name', 'description', 'qty sold']
+        data['omega name'] = omega_client
+        data['file date'] = file_date
+        cols = ['omega name', 'file date', 'description', 'qty sold']
         data = data[cols]
 
     return data

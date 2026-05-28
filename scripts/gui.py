@@ -177,9 +177,9 @@ if st.button("▶ Run Pipeline", type="primary", use_container_width=True):
                     st.write("Loaded all available data")          
 
 
-            with st.status("Finishing...", expanded=True) as status_fin:
-                clear_junk_rows(str(master_path), no_nulls)
-                status_fin.update(label="Finishing", state="complete", expanded=True)
-                st.write('Done')
+            # with st.status("Finishing...", expanded=True) as status_fin:
+            #     clear_junk_rows(str(master_path), no_nulls)
+            #     status_fin.update(label="Finishing", state="complete", expanded=True)
+            #     st.write('Done')
 
             st.success("✅ Successfully updated 'Auto Calc.xlsx'")

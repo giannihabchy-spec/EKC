@@ -253,7 +253,6 @@ def add_quick_variance(sheets_dict):
     return sheets_dict
 
 
-
 def increment_month_in_sheets(sheet_dict):
     updated_sheets = {}
 
@@ -265,3 +264,14 @@ def increment_month_in_sheets(sheet_dict):
         updated_sheets[sheet_name] = df_copy
 
     return updated_sheets
+
+
+def convert_sheet_names_in_dict(sheet_dict, jobs):   # file name -> sheet name in AutoCalc
+
+    new_sheets_dict = {}
+
+    for name, df in sheet_dict.items():
+        new_name = [x['sheet'] for x in jobs if x['key'] == name][0]
+        new_sheets_dict[new_name] = df
+
+    return new_sheets_dict

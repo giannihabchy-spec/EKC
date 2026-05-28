@@ -41,6 +41,9 @@ from supa.modeling import (
     apply_grouping,
     normalize_string_columns,
     clean_numeric_values,
+    adjust_configs,
+    add_quick_variance,
+    convert_sheet_names_in_dict,
 )
 from supa.validators import (
     validate_required_columns,
@@ -136,6 +139,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
         branch_id = qr_res["branch_id"]
         # omega_name = get_branch_omega_name(branch_id, supabase)['omega_name'] #######################################
         report_date = pd.to_datetime(selected_period)
+        jobs = get_jobs(source)
 
         st.write('Done')
 
@@ -173,7 +177,40 @@ if st.button("▶ Run", type="primary", use_container_width=True):
         #     st.stop()
         # st.write(name_validation['msg'])
 
-
         status_validation.update(label="Validating", state="complete", expanded=True)
 
 
+    with st.status("Formatting Data...", expanded=True) as form_st:
+        SHEET_CONFIG = adjust_configs(SHEET_CONFIG)
+        cleaned = normalize_all_dataframes(cleaned)
+        cleaned = convert_sheet_names_in_dict(cleaned, jobs)
+
+        norm_res = normalize_string_columns(cleaned)
+        if norm_res["status"] != "ok":
+            st.write(norm_res["message"])
+            form_st.update(label="Formatting Data", state="error", expanded=True)
+            st.stop()
+        cleaned = norm_res["data"]
+        cleaned = add_quick_variance(cleaned)
+        st.write(norm_res["message"])
+
+        grp_res = apply_grouping(cleaned, SHEET_CONFIG)
+        if grp_res["status"] != "ok":
+            st.write(grp_res["message"])
+            form_st.update(label="Formatting Data", state="error", expanded=True)
+            st.stop()
+        cleaned = grp_res["data"]
+        st.write(grp_res["message"])
+
+        meta_res = add_metadata(cleaned, branch_id, selected_period, 'Unknown', 0)
+        if meta_res["status"] != "ok":
+            st.write(meta_res["message"])
+            form_st.update(label="Formatting Data", state="error", expanded=True)
+            st.stop()
+        cleaned = meta_res["data"]
+        st.write(meta_res["message"])
+
+        cleaned = clean_numeric_values(cleaned)
+        save_cleaned_data(cleaned, base_folder, 'very cleaned data.xlsx')
+        
+        form_st.update(label="Formatting Data", state="complete", expanded=True)

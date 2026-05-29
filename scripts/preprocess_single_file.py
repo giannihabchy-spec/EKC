@@ -1,7 +1,9 @@
 import importlib                                    
 import streamlit as st
 from pathlib import Path
-from ml.ops.concat import concat_files
+from etl.strip_all import strip_all
+from etl.special_characters import special_char
+from etl.saver import save_cleaned_data
 
 _ROOT = Path(__file__).resolve().parent.parent
 _PREPROC_ROOT = _ROOT / "src" / "ml" / "preprocessors"
@@ -22,6 +24,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+st.title("Preprocess Single File")
+st.markdown("---")
 
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -53,6 +58,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
     with st.status("Filtering...", expanded=True) as filter_st:
         base_folder = Path(folder_input).resolve()
+        file_name = preprocessor.replace("_", " ")
         files = [p for p in base_folder.iterdir() if p.is_file()]
         if len(files) > 1:
             st.error("Folder must contain exactly one file.")
@@ -60,7 +66,11 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             st.stop()
         file = files[0]
         data = preprocess_func(file)
-        data.to_excel(base_folder/'Cleaned Data.xlsx', index = False, engine="openpyxl")
+
+        data_dict = strip_all({file_name: data})
+        data_dict = special_char(data_dict)
+
+        save_cleaned_data(data_dict, base_folder)
         st.write('Done')
         filter_st.update(state="complete",expanded=True)
 

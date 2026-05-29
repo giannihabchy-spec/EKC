@@ -41,5 +41,5 @@ def concat_files(folder_path, preprocessing_func):
 
     return {
         'status': 'ok',
-        'msg': None
+        'msg': 'Data is saved'
     }

@@ -42,7 +42,6 @@ def preprocess(path):
     'group',
     'item'] + list(new_cols)
     data = drop_na_by_name(data, ['item'])
-    df = data
     data = data.melt(
         id_vars=["category", "group", "item"],  # columns to keep
         var_name="date",                        # old column names
@@ -56,5 +55,8 @@ def preprocess(path):
     data = make_columns_date(data, ['date'])
     data['omega_name'] = omega_name
     cols = ['omega_name','category', 'group', 'item', 'date', 'qty']
+    data = data[cols]
+    data.columns = ['omega_name','category', 'group', 'item', 'report date', 'qty sold']
+    cols = ['omega_name', 'report date', 'category', 'group', 'item', 'qty sold']
     data = data[cols]
     return data

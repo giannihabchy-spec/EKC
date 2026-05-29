@@ -23,6 +23,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+st.title("Concat")
+st.markdown("---")
+
 col1, col2, col3 = st.columns(3)
 with col1:
     folder_input = st.text_input("📁 Target Folder Path", placeholder="C:/Path/To/Folder")

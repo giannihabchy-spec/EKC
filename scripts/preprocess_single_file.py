@@ -53,8 +53,15 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
     with st.status("Filtering...", expanded=True) as filter_st:
         base_folder = Path(folder_input).resolve()
-        result = concat_files(base_folder, preprocessing_func=preprocess_func)
-        st.write(result['msg'])
+        files = [p for p in base_folder.iterdir() if p.is_file()]
+        if len(files) > 1:
+            st.error("Folder must contain exactly one file.")
+            filter_st.update(state="error",expanded=True)
+            st.stop()
+        file = files[0]
+        data = preprocess_func(file)
+        data.to_excel(base_folder/'Cleaned Data.xlsx', index = False, engine="openpyxl")
+        st.write('Done')
         filter_st.update(state="complete",expanded=True)
 
-    st.success("✅ Done")
+    st.success("✅ Data Saved")

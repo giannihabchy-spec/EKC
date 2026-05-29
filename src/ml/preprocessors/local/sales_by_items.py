@@ -23,11 +23,11 @@ def preprocess(path):
     data['Total Amount'] = data['Total Amount'].shift(-1)
     data = drop_na_by_name(data,['Description'])
     data = make_columns_numeric(data,['Qty','Total Amount'])
-    data.columns = ['description', 'qty sold', 'gross sales']
+    data.columns = ['description', 'qty_sold', 'gross sales']
 
-    data['omega name'] = omega_client
-    data['report date'] = file_date
-    cols = ['omega name', 'report date', 'description', 'qty sold']
+    data['omega_name'] = omega_client
+    data['report_date'] = file_date
+    cols = ['omega_name', 'report_date', 'description', 'qty_sold']
     data = data[cols]
 
     return data

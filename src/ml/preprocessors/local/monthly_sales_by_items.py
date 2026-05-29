@@ -56,7 +56,7 @@ def preprocess(path):
     data['omega_name'] = omega_name
     cols = ['omega_name','category', 'group', 'item', 'date', 'qty']
     data = data[cols]
-    data.columns = ['omega_name','category', 'group', 'item', 'report date', 'qty sold']
-    cols = ['omega_name', 'report date', 'category', 'group', 'item', 'qty sold']
+    data.columns = ['omega_name','category', 'item_group', 'description', 'report_date', 'qty_sold']
+    cols = ['omega_name', 'report_date', 'category', 'item_group', 'description', 'qty_sold']
     data = data[cols]
     return data

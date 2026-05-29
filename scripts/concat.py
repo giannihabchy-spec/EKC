@@ -2,6 +2,9 @@ import importlib
 import streamlit as st
 from pathlib import Path
 from ml.ops.concat import concat_files
+from etl.saver import save_cleaned_data
+from etl.strip_all import strip_all
+from etl.special_characters import special_char
 
 _ROOT = Path(__file__).resolve().parent.parent
 _PREPROC_ROOT = _ROOT / "src" / "ml" / "preprocessors"
@@ -57,7 +60,20 @@ if st.button("▶ Run", type="primary", use_container_width=True):
     with st.status("Filtering...", expanded=True) as filter_st:
         base_folder = Path(folder_input).resolve()
         result = concat_files(base_folder, preprocessing_func=preprocess_func)
+        if result['status'] != 'ok':
+            st.write(result['msg'])
+            filter_st.update(state="error",expanded=True)
+            st.stop()
+        
+        final_name = result['final_name']
+        destination = result['destination']
+        data = result['data']
+
+        data = strip_all(data)
+        data = special_char(data)
+        save_cleaned_data(data, destination,final_name)
         st.write(result['msg'])
+
         filter_st.update(state="complete",expanded=True)
 
     st.success("✅ Done")

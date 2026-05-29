@@ -36,10 +36,14 @@ def concat_files(folder_path, preprocessing_func):
     # )
 
     name = preprocessing_func.__module__.split(".")[-1].replace("_", " ")
-    output_path = folder.parent / f"{name}.xlsx"
-    combined_df.to_excel(output_path, index=False)
+    final_name = f"{name}.xlsx"
+    destination = folder.parent
+    # combined_df.to_excel(output_path, index=False)
 
     return {
         'status': 'ok',
-        'msg': 'Data is saved'
+        'msg': 'Data is saved',
+        'destination': destination,
+        'final_name': final_name,
+        'data': {name: combined_df}
     }

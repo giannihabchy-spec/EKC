@@ -28,7 +28,5 @@ def preprocess(path, omega_loc: bool = False):
     if omega_loc:
         data['omega name'] = omega_client
         data['file date'] = file_date
-        cols = ['omega name', 'file date', 'raw materials', 'qty']
-        data = data[cols]
 
     return data

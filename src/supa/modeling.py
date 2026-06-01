@@ -65,16 +65,6 @@ def add_metadata(
         df['currency'] = currency
         df['client_rate'] = rate
 
-        df['currency'] = df['currency'].apply(
-            lambda x: (
-                str(x).strip()
-                .replace("’", "")
-                .replace("'", "")
-                .title()
-                if isinstance(x, str) else x
-            )
-        )
-
         cols = ["report_date", "branch_id", "currency", "client_rate"] + [
             c for c in df.columns if c not in ["report_date", "branch_id", "currency", "client_rate"]
         ]

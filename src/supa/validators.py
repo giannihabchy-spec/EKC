@@ -420,7 +420,7 @@ def validate_file_dates(sheets_dict, selected_date): # for quick Variance
 
 
 
-def validate_omega_name(sheets_dict, selected_name): # for quick Variance
+def validate_omega_name(sheets_dict, supa_list): # for quick Variance
 
     all_names = []
 
@@ -428,15 +428,15 @@ def validate_omega_name(sheets_dict, selected_name): # for quick Variance
         omega_name = df['omega name'].iloc[0]
         all_names.append(omega_name)
 
-    if len(set(all_names)) > 1:
-        return {
-            'status': 'error',
-            'msg': 'Files contain multiple names'
-        }
+    # if len(set(all_names)) > 1:
+    #     return {
+    #         'status': 'error',
+    #         'msg': 'Files contain multiple names'
+    #     }
     
-    file_name = all_names[0]
+    # file_name = all_names[0]
 
-    condition = (file_name == selected_name)
+    condition = (set(all_names).issubset(supa_list))
     if condition:
         return {
             'status': 'ok',
@@ -445,5 +445,5 @@ def validate_omega_name(sheets_dict, selected_name): # for quick Variance
     
     return {
         'status': 'error',
-        'msg': f"The files name '{file_name}' do not match the selected client's Omega name '{selected_name}'"
+        'msg': f"The files names '{set(all_names)}' do not match the selected client's Omega name '{supa_list}'"
     }

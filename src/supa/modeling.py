@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import re
-import streamlit as st
 
 def normalize_column_name(col: str) -> str:
     col = str(col).strip().lower()
@@ -65,6 +64,16 @@ def add_metadata(
         df["report_date"] = report_period
         df['currency'] = currency
         df['client_rate'] = rate
+
+        df['currency'] = df['currency'].apply(
+            lambda x: (
+                str(x).strip()
+                .replace("’", "")
+                .replace("'", "")
+                .title()
+                if isinstance(x, str) else x
+            )
+        )
 
         cols = ["report_date", "branch_id", "currency", "client_rate"] + [
             c for c in df.columns if c not in ["report_date", "branch_id", "currency", "client_rate"]
@@ -167,14 +176,6 @@ def normalize_string_columns(sheets_dict):
 
         for col in str_cols:
             try:
-                # df[col] = (
-                #     df[col]
-                #     .astype(str)
-                #     .str.strip()
-                #     .str.replace(r"\s+", " ", regex=True)
-                #     .str.replace(r"[’']", "", regex=True)
-                #     .str.title()
-                # )
                 df[col] = df[col].apply(
                     lambda x: (
                         str(x).strip()

@@ -197,7 +197,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
         st.write(meta_res["message"])
 
         cleaned = clean_numeric_values(cleaned)
-        save_cleaned_data(cleaned, base_folder, 'very cleaned data.xlsx')
+        # save_cleaned_data(cleaned, base_folder, 'very cleaned data.xlsx')
         
         form_st.update(label="Formatting Data", state="complete", expanded=True)
 

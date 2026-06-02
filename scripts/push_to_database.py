@@ -29,7 +29,8 @@ from supa.validators import (
     find_existing_data,
     delete_existing_data,
     check_duplicates,
-    check_rows
+    check_rows,
+    validate_currency_rate
 )
 
 
@@ -121,6 +122,12 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             val_st.update(label="Validating Client and Date", state="error", expanded=True)
             st.stop()
         st.write(date_res["message"])
+
+        cur_rate_res = validate_currency_rate(branch_id, currency, rate)
+        if cur_rate_res['status'] != 'ok':
+            st.write(cur_rate_res["msg"])
+            val_st.update(label="Validating Client and Date", state="error", expanded=True)
+            st.stop()
 
         try:
             conn = get_pg_connection()

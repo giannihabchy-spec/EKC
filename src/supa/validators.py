@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 import re
-from supa.db import get_branch_id, get_branch_omega_name
+from supa.db import get_branch_id, get_branch_omega_name, get_pg_connection
 
 
 def validate_client_name(real_client, entered_client):
@@ -419,8 +419,7 @@ def validate_file_dates(sheets_dict, selected_date): # for quick Variance
     }
 
 
-
-def validate_omega_name(sheets_dict, selected_name): # for quick Variance
+def validate_omega_name(sheets_dict, supa_list): # for quick Variance
 
     all_names = []
 
@@ -428,15 +427,15 @@ def validate_omega_name(sheets_dict, selected_name): # for quick Variance
         omega_name = df['omega name'].iloc[0]
         all_names.append(omega_name)
 
-    if len(set(all_names)) > 1:
-        return {
-            'status': 'error',
-            'msg': 'Files contain multiple names'
-        }
+    # if len(set(all_names)) > 1:
+    #     return {
+    #         'status': 'error',
+    #         'msg': 'Files contain multiple names'
+    #     }
     
-    file_name = all_names[0]
+    # file_name = all_names[0]
 
-    condition = (file_name == selected_name)
+    condition = (set(all_names).issubset(supa_list))
     if condition:
         return {
             'status': 'ok',
@@ -445,5 +444,44 @@ def validate_omega_name(sheets_dict, selected_name): # for quick Variance
     
     return {
         'status': 'error',
-        'msg': f"The files name '{file_name}' do not match the selected client's Omega name '{selected_name}'"
+        'msg': f"The files names '{set(all_names)}' do not match the selected client's Omega name '{supa_list}'"
+    }
+
+
+def validate_currency_rate(branch_id, file_cur, file_rate):
+    conn = get_pg_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT currency, client_rate
+        FROM branches
+        WHERE id = %s
+    """, (branch_id,))
+
+    result = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    client_cur = result[0]
+    client_rate = result[1]
+
+    condition1 = client_cur == file_cur
+    condition2 = client_rate == file_rate
+
+    if not condition1:
+        return {
+            'status': 'error',
+            'msg': f"Client's currency '{client_cur}' is different from the rate in Info '{file_cur}'"
+        }
+    
+    if not condition2:
+        return {
+            'status': 'error',
+            'msg': f"Client's rate '{client_rate}' is different from the rate in Info '{file_rate}'"
+        }
+    
+    return {
+        'status': 'ok',
+        'msg': None
     }

@@ -29,9 +29,16 @@ def extract_sheets_and_client(file_path, sheet_config):
         real_client = row.get('Restaurant Name')
         cur = row.get('Currency')
         if isinstance(cur,str):
-            currency = cur.strip().lower()
+            currency = (
+                str(cur).strip()
+                .replace("’", "")
+                .replace("'", "")
+                .title()
+            )
         else:
-            currency = np.nan
+            currency = pd.NA
+
+            
         rate = row.get('Rate')
 
         info = {

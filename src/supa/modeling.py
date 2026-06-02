@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import re
-import streamlit as st
 
 def normalize_column_name(col: str) -> str:
     col = str(col).strip().lower()
@@ -167,14 +166,6 @@ def normalize_string_columns(sheets_dict):
 
         for col in str_cols:
             try:
-                # df[col] = (
-                #     df[col]
-                #     .astype(str)
-                #     .str.strip()
-                #     .str.replace(r"\s+", " ", regex=True)
-                #     .str.replace(r"[’']", "", regex=True)
-                #     .str.title()
-                # )
                 df[col] = df[col].apply(
                     lambda x: (
                         str(x).strip()

@@ -30,16 +30,20 @@ def concat_files(folder_path, preprocessing_func):
         all_dfs.append(df)
 
     combined_df = pd.concat(all_dfs, ignore_index=True)
-    combined_df = combined_df.sort_values(
-        by="report_date",
-        ascending=False
-    )
+    # combined_df = combined_df.sort_values(
+    #     by="report_date",
+    #     ascending=False
+    # )
 
     name = preprocessing_func.__module__.split(".")[-1].replace("_", " ")
-    output_path = Path(folder_path) / f"{name}.xlsx"
-    combined_df.to_excel(output_path, index=False)
+    final_name = f"{name}.xlsx"
+    destination = folder.parent
+    # combined_df.to_excel(output_path, index=False)
 
     return {
         'status': 'ok',
-        'msg': None
+        'msg': 'Data is saved',
+        'destination': destination,
+        'final_name': final_name,
+        'data': {name: combined_df}
     }

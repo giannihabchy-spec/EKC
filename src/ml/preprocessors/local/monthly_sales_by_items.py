@@ -1,11 +1,11 @@
 import pandas as pd
-from etl.utils import read
 from etl.utils import drop_na_by_name
 from etl.utils import make_columns_date
-
+from etl.utils import get_omega_client_name
 
 def preprocess(path):
-    data = read(path)
+    data = pd.read_excel(path)
+    omega_name = get_omega_client_name(data, (2,0))
     data = data.iloc[16:].copy()
     data.columns = (
         ["category", "group", "item"]
@@ -13,7 +13,10 @@ def preprocess(path):
     )
     data[['category', 'group']] = data[['category', 'group']].ffill()
     data.iloc[0,3:] = data.iloc[0,3:].bfill()
-    data.iloc[1,3:-1] = [cell.split()[0] for cell in data.iloc[1,3:-1]]
+    data.iloc[1, 3:-1] = [
+        str(cell).split()[0] if pd.notna(cell) else cell
+        for cell in data.iloc[1, 3:-1]
+    ]
     bad_cols = pd.to_numeric(data.iloc[1], errors="coerce").isna()
 
     bad_cols_names = data.columns[bad_cols][3:]
@@ -23,17 +26,21 @@ def preprocess(path):
         .astype(str)
         .str.replace(",", "", regex=False)
     )
+
     months = (
         data.iloc[1, 3:]
         .astype(str)
         .str.replace(",", "", regex=False)
     )
+
     new_cols = (
         months.astype(float).astype(int).astype(str).str.zfill(2)
         + "-"
         + years.astype(float).astype(int).astype(str)
     )
-    data.columns = ['category','group','item'] + list(new_cols)
+    data.columns = ['category',
+    'group',
+    'item'] + list(new_cols)
     data = drop_na_by_name(data, ['item'])
     data = data.melt(
         id_vars=["category", "group", "item"],  # columns to keep
@@ -46,4 +53,10 @@ def preprocess(path):
         errors="raise"   # or "raise", "ignore"
     )
     data = make_columns_date(data, ['date'])
+    data['omega_name'] = omega_name
+    cols = ['omega_name','category', 'group', 'item', 'date', 'qty']
+    data = data[cols]
+    data.columns = ['omega_name','category', 'item_group', 'description', 'report_date', 'qty_sold']
+    cols = ['omega_name', 'report_date', 'category', 'item_group', 'description', 'qty_sold']
+    data = data[cols]
     return data

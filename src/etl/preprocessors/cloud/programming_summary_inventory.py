@@ -33,10 +33,10 @@ def preprocess(path):
     data['Group'] = data['Group'].ffill()
 
     data = drop_na_by_name(data,['Product Description'])
-    data = data.drop(['Product Code','Item Id'], axis = 1)    
-    cols = ['Category','Group','Product Description','Qty I F','Unit','Pur Unit','Qty Pur','Inv Unit','Avg Cost']
+    data = data.drop(['Item Id'], axis = 1)    
+    cols = ['Category','Group','Product Code','Product Description','Qty I F','Unit','Pur Unit','Qty Pur','Inv Unit','Avg Cost']
     data = data[cols]
     data = drop_na_by_name(data,['Unit'])
     data = make_columns_numeric(data,['Qty I F','Qty Pur','Avg Cost'])
-    data.columns = ['category','group','product description','qty I F','unit','pur unit','qty pur','inv unit','lbp']
+    data.columns = ['category','group','product code','product description','qty I F','unit','pur unit','qty pur','inv unit','lbp']
     return data

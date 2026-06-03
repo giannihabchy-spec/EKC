@@ -119,3 +119,45 @@ def _ensure_supa_env_from_secrets():
         val = st.secrets.get(secret_key)
         if val:
             os.environ[env_key] = str(val)
+
+
+def get_omega_currency(branch_id, supabase):
+
+    try:
+        response = (
+            supabase
+            .table("branches")
+            .select("id, omega_currency")
+            .eq("id", branch_id)
+            .execute()
+        )
+    except Exception as e:
+        msg = f"⚠️ Failed to fetch client's omega_currency"
+        return {
+            "status": "error",
+            "message": msg,
+            "omega_currency": None
+        }
+
+    rows = response.data if response and hasattr(response, "data") else []
+
+    if not rows:
+        msg = f"⚠️ Client was not found in the clients table"
+        return {
+            "status": "error",
+            "message": msg,
+            "omega_currency": None
+        }
+
+    if len(rows) > 1:
+        msg = f"⚠️ Multiple currencies found for the client"
+        return {
+            "status": "error",
+            "message": msg,
+            "omega_currency": None
+        }
+
+    return {
+            "status": "ok",
+            "omega_currency": rows[0]["omega_currency"]
+        }

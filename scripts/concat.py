@@ -2,9 +2,19 @@ import importlib
 import streamlit as st
 from pathlib import Path
 from ml.ops.concat import concat_files
+from ml.validators import validate_omega_name
 from etl.saver import save_cleaned_data
 from etl.strip_all import strip_all
 from etl.special_characters import special_char
+from supa.streamlit_functions import get_client_list
+from supa.db import (
+    init_supabase,
+    get_branch_id,
+)
+
+if "ptdb_supabase_client" not in st.session_state:
+    st.session_state.ptdb_supabase_client = init_supabase()
+supabase = st.session_state.ptdb_supabase_client
 
 _ROOT = Path(__file__).resolve().parent.parent
 _PREPROC_ROOT = _ROOT / "src" / "ml" / "preprocessors"
@@ -29,9 +39,12 @@ st.set_page_config(
 st.title("Concat")
 st.markdown("---")
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 with col1:
     folder_input = st.text_input("📁 Target Folder Path", placeholder="C:/Path/To/Folder")
+with col2:
+    client_options = get_client_list(supabase)
+    selected_client = st.selectbox("Select Branch", options=client_options, key="ptdb_client")
 with col2:
     source = st.selectbox("🔀 Source", options=["cloud", "local"], index=0)
 with col3:
@@ -54,6 +67,9 @@ with col3:
         )
         preprocessor = None
         preprocess_func = None
+with col4:
+    push = st.selectbox("💾 push", options=["d'ont push", "push"], index=0)
+
 
 if st.button("▶ Run", type="primary", use_container_width=True):
 
@@ -72,8 +88,26 @@ if st.button("▶ Run", type="primary", use_container_width=True):
         data = strip_all(data)
         data = special_char(data)
         save_cleaned_data(data, destination,final_name)
-        st.write(result['msg'])
+        st.write('Data is Filtered')
 
         filter_st.update(state="complete",expanded=True)
+
+    if push == 'push':
+
+        with st.status("Validating...", expanded=True) as validating_st:
+            qr_res = get_branch_id(selected_client, supabase)
+            branch_id = qr_res["branch_id"]
+
+            name_val = validate_omega_name(data, branch_id, supabase)
+            if name_val['status'] != 'ok':
+                st.write(name_val['msg'])
+                validating_st.update(label="Validating", state="error", expanded=True)
+                st.stop()
+            st.write(name_val['msg'])
+            st.stop()
+
+
+        # with st.status("Writing to Database...", expanded=True) as writing_st:
+
 
     st.success("✅ Done")

@@ -771,4 +771,26 @@ SHEET_CONFIG = {
         ]
     },
 
+    "Sales. Cat.": { ############################################################################################
+        "target_table": "ac_sales_category",
+
+        "expected_columns": [
+            'category', 
+            'sales', 
+        ],
+
+        "unique_key": [
+            "branch_id",
+            "report_date",
+            "category"
+        ],
+
+        "load_mode": "insert",
+
+        "no_nulls": [
+            'category', 
+            'sales'
+        ]
+    },
+
 }

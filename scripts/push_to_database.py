@@ -21,6 +21,7 @@ from supa.modeling import (
     apply_grouping,
     normalize_string_columns,
     clean_numeric_values,
+    create_sales_category,
 )
 from supa.validators import (
     validate_required_columns,
@@ -90,6 +91,8 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
     with st.status("Formatting Data...", expanded=True) as form_st:
         sheets_dict = normalize_all_dataframes(sheets_dict)
+
+        sheets_dict = create_sales_category(sheets_dict)
 
         norm_res = normalize_string_columns(sheets_dict)
         if norm_res["status"] != "ok":

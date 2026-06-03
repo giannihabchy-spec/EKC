@@ -44,6 +44,7 @@ def concat_files(folder_path, preprocessing_func):
         'status': 'ok',
         'msg': 'Data is saved',
         'destination': destination,
+        'prep_name': name,
         'final_name': final_name,
         'data': {name: combined_df}
     }

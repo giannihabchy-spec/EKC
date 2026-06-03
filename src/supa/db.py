@@ -1,7 +1,20 @@
+import pandas as pd
 import os
 from supabase import create_client as supabase_init
 import psycopg2
 import streamlit as st
+from pathlib import Path
+import tomllib
+
+
+ROOT = Path(__file__).parents[2]
+SECRETS_PATH = ROOT / ".streamlit" / "secrets.toml"
+with SECRETS_PATH.open("rb") as f:
+    secrets = tomllib.load(f)
+for key in ["url", "key", "host", "port", "name", "user", "password"]:
+    if key in secrets:
+        os.environ[key] = str(secrets[key])
+
 
 def get_pg_connection():
     return psycopg2.connect(
@@ -161,3 +174,12 @@ def get_omega_currency(branch_id, supabase):
             "status": "ok",
             "omega_currency": rows[0]["omega_currency"]
         }
+
+
+def get_monthly_rates():
+
+    conn = get_pg_connection()
+    data = pd.read_sql("select * from monthly_rate;", conn)
+    conn.close()
+
+    return data

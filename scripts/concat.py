@@ -10,6 +10,7 @@ from supa.streamlit_functions import get_client_list
 from supa.db import (
     init_supabase,
     get_branch_id,
+    get_omega_currency,
 )
 
 if "ptdb_supabase_client" not in st.session_state:
@@ -39,15 +40,15 @@ st.set_page_config(
 st.title("Concat")
 st.markdown("---")
 
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
 with col1:
     folder_input = st.text_input("📁 Target Folder Path", placeholder="C:/Path/To/Folder")
 with col2:
     client_options = get_client_list(supabase)
     selected_client = st.selectbox("Select Branch", options=client_options, key="ptdb_client")
-with col2:
-    source = st.selectbox("🔀 Source", options=["cloud", "local"], index=0)
 with col3:
+    source = st.selectbox("🔀 Source", options=["cloud", "local"], index=0)
+with col4:
     preprocessor_options = _list_preprocessors(source)
     if preprocessor_options:
         preprocessor = st.selectbox(
@@ -67,8 +68,11 @@ with col3:
         )
         preprocessor = None
         preprocess_func = None
-with col4:
+with col5:
     push = st.selectbox("💾 push", options=["d'ont push", "push"], index=0)
+
+
+cur_and_rate_sheets = ['sales by category']
 
 
 if st.button("▶ Run", type="primary", use_container_width=True):
@@ -81,6 +85,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             filter_st.update(state="error",expanded=True)
             st.stop()
         
+        prep_name = result['prep_name']
         final_name = result['final_name']
         destination = result['destination']
         data = result['data']
@@ -92,7 +97,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
         filter_st.update(state="complete",expanded=True)
 
-    if push == 'push':
+    if push == 'push': #######################################################    if push
 
         with st.status("Validating...", expanded=True) as validating_st:
             qr_res = get_branch_id(selected_client, supabase)
@@ -104,10 +109,10 @@ if st.button("▶ Run", type="primary", use_container_width=True):
                 validating_st.update(label="Validating", state="error", expanded=True)
                 st.stop()
             st.write(name_val['msg'])
-            st.stop()
 
+        if prep_name in cur_and_rate_sheets: #################################    if cur and rate needed
+            currency = get_omega_currency(branch_id, supabase)
 
-        # with st.status("Writing to Database...", expanded=True) as writing_st:
 
 
     st.success("✅ Done")

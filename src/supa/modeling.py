@@ -266,3 +266,16 @@ def convert_sheet_names_in_dict(sheet_dict, jobs):   # file name -> sheet name i
         new_sheets_dict[new_name] = df
 
     return new_sheets_dict
+
+
+def create_sales_category(sheets_dict):
+    data = sheets_dict.get("Sales")
+
+    sales_cat = (
+        data.groupby("category", as_index=False)["gross_sales"]
+        .sum()
+        .rename(columns={"gross_sales": "sales"})
+    )
+
+    sheets_dict["Sales. Cat."] = sales_cat
+    return sheets_dict

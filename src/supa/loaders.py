@@ -41,10 +41,12 @@ def extract_sheets_and_client(file_path, sheet_config):
             
         rate = row.get('Rate')
 
+        excluded_sheets = {"Sales. Cat."}
+
         info = {
             "status": 'ok',
             "common_sheet_names": common_names,
-            "missing_in_workbook": [s for s in sheet_config if s not in xls.sheet_names],
+            "missing_in_workbook": [s for s in sheet_config if s not in xls.sheet_names and s not in excluded_sheets],
             "extra_in_workbook": [s for s in xls.sheet_names if s not in sheet_config],
             "msg": "All info extracted"
         }

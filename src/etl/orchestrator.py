@@ -54,66 +54,77 @@ cleaner_by_code = {
 }
 
 
-def _is_requisition_summary_ib_filename(filename: str) -> bool:
-    """Match REP_I_0087_IB.xlsx and variants like REP_I_0087_IB (1).xlsx."""
-    return re.fullmatch(r"REP_I_0087_IB(?: \(\d+\))?\.xlsx", filename) is not None
+multiple_allowed = {
+    'REP_I_0087_IB.xlsx', # req sum ib (cloud)
+    'REP_I_0044.xlsx', # prog sum inv (cloud)
+    'rep_i_0044.xls', # prog sum inv (local)
+}
+
+def _base_filename(filename: str) -> str:
+    """Remove duplicate suffix like ' (1)' before extension."""
+    return re.sub(r" \(\d+\)(?=\.[^.]+$)", "", filename)
+
+
+def _is_multiple_allowed(filename: str, allowed_files: set[str]) -> bool:
+    return _base_filename(filename) in allowed_files
 
 
 def clean_folder(
-        folder: str | Path, 
-        source: Literal["cloud", "local"] = "cloud", 
-        log_func=print, 
-        patterns: dict  = cleaner_by_code,
-        quick_variance: bool = False,
-        ) -> dict[str, object]:
+    folder: str | Path,
+    source: Literal["cloud", "local"] = "cloud",
+    log_func=print,
+    patterns: dict = cleaner_by_code,
+    quick_variance: bool = False,
+) -> dict[str, object]:
+
     folder = Path(folder)
+
     if not folder.exists() or not folder.is_dir():
         raise NotADirectoryError(f"Folder not found or not a directory: {folder}")
+
     if source not in patterns:
         raise ValueError(f"source must be 'cloud' or 'local', got {source!r}")
 
     cleaners = patterns[source]
     cleaned: dict[str, object] = {}
-    ib_files = [
-        p
-        for p in folder.iterdir()
-        if p.is_file() and _is_requisition_summary_ib_filename(p.name)
-    ]
-    multi_ib = len(ib_files) > 1
 
-    for p in folder.iterdir():
-        if not p.is_file():
-            continue
+    files = [p for p in folder.iterdir() if p.is_file()]
 
-        if multi_ib and _is_requisition_summary_ib_filename(p.name):
-            ib_index = (
-                sum(1 for k in cleaned.keys() if k.startswith("requisition summary IB "))
+    special_counts: dict[str, int] = {}
+    for p in files:
+        base_name = _base_filename(p.name)
+        if _is_multiple_allowed(p.name, multiple_allowed):
+            special_counts[base_name] = special_counts.get(base_name, 0) + 1
+
+    for p in files:
+        base_name = _base_filename(p.name)
+
+        is_special = _is_multiple_allowed(p.name, multiple_allowed)
+        has_multiple = special_counts.get(base_name, 0) > 1
+
+        if is_special and has_multiple:
+            entry = cleaners.get(base_name)
+            if entry is None:
+                continue
+
+            base_output_name, cleaner = entry
+
+            index = (
+                sum(
+                    1 for k in cleaned.keys()
+                    if k.startswith(f"{base_output_name} ")
+                )
                 + 1
             )
-            output_name = f"requisition summary IB {ib_index}"
-            cleaner = cloud.requisition_summary_IB.preprocess
 
-            try:
-                result = cleaner(str(p))
-                cleaned[output_name] = result
+            output_name = f"{base_output_name} {index}"
 
-                if isinstance(result, pd.DataFrame):
-                    nan_cols = result.columns[result.isna().any()].tolist()
-                    if nan_cols:
-                        log_func(f"NaNs in {output_name}: {nan_cols}")
+        else:
+            entry = cleaners.get(p.name)
+            if entry is None:
+                continue
 
-                log_func(f"Cleaned {p.name} -> {output_name}")
-
-            except Exception as e:
-                log_func(f"⚠️ Failed cleaning {p.name} -> {output_name}\n{e}")
-
-            continue
-
-        entry = cleaners.get(p.name)
-        if entry is None:
-            continue
-
-        output_name, cleaner = entry
+            output_name, cleaner = entry
 
         try:
             result = (
@@ -121,6 +132,7 @@ def clean_folder(
                 if quick_variance
                 else cleaner(str(p))
             )
+
             cleaned[output_name] = result
 
             if isinstance(result, pd.DataFrame):
@@ -132,5 +144,18 @@ def clean_folder(
 
         except Exception as e:
             log_func(f"⚠️ Failed cleaning {p.name} -> {output_name}\n{e}")
+
+    grouped: dict[str, list[pd.DataFrame]] = {}
+
+    for key, value in cleaned.items():
+        match = re.fullmatch(r"(.+) \d+", key)
+        if match and isinstance(value, pd.DataFrame):
+            base_key = match.group(1)
+            grouped.setdefault(base_key, []).append(value)
+
+    for base_key, frames in grouped.items():
+        if len(frames) > 1:
+            cleaned[base_key] = pd.concat(frames, ignore_index=True)
+            log_func(f"Concatenated {len(frames)} files -> {base_key}")
 
     return cleaned

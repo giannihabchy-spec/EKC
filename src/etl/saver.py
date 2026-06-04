@@ -1,5 +1,5 @@
 from pathlib import Path
-
+import streamlit as st
 import pandas as pd
 
 
@@ -14,7 +14,7 @@ _SHEET_NAME_MAP: dict[str, str] = {
 }
 
 
-def save_cleaned_data(cleaned: dict[str, object], raw_folder: str | Path, result_name: str = 'Cleaned Data.xlsx') -> None:
+def save_cleaned_data(cleaned: dict[str, object], raw_folder: str | Path, result_name: str = 'Cleaned Data.xlsx') -> Path | None:
     
     folder_path = Path(raw_folder)
     if not folder_path.exists() or not folder_path.is_dir():
@@ -22,14 +22,19 @@ def save_cleaned_data(cleaned: dict[str, object], raw_folder: str | Path, result
 
     workbook_path = folder_path / result_name
 
-    with pd.ExcelWriter(workbook_path, engine="openpyxl") as writer:
-        for name, value in cleaned.items():
-            if not isinstance(value, pd.DataFrame):
-                continue
+    try:
+        with pd.ExcelWriter(workbook_path, engine="openpyxl") as writer:
+            for name, value in cleaned.items():
+                if not isinstance(value, pd.DataFrame):
+                    continue
 
-            sheet_name = _SHEET_NAME_MAP.get(name, name)[:31]
+                sheet_name = _SHEET_NAME_MAP.get(name, name)[:31]
 
-            value.to_excel(writer, sheet_name=sheet_name, index=False)
+                value.to_excel(writer, sheet_name=sheet_name, index=False)
+
+    except PermissionError:
+        st.write(f"❌❌ please close the excel file '{result_name}' and try again.")
+        st.stop()
+        return None
 
     return workbook_path
-

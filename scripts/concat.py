@@ -152,7 +152,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             data = clean_numeric_values(data)
             st.write('Done')
 
-            save_cleaned_data(data, 'C:/Users/Gianni Habchi/Desktop', 'concat data la halla2.xlsx')
+            # save_cleaned_data(data, 'C:/Users/Gianni Habchi/Desktop', 'concat data la halla2.xlsx')
 
             form_st.update(label="Formatting Data", state="complete", expanded=True)
 

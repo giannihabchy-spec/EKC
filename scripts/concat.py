@@ -29,6 +29,7 @@ from supa.modeling import (
     normalize_string_columns,
     clean_numeric_values
 )
+from supa.loaders import push_sheets
 
 if "ptdb_supabase_client" not in st.session_state:
     st.session_state.ptdb_supabase_client = init_supabase()
@@ -190,7 +191,19 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
             exsting_data_st.update(label="Checking existing data", state="complete", expanded=True)
 
-            
+
+        with st.status("Writing to Database...", expanded=True) as write_st:
+            try:
+                load_res = push_sheets(data, SHEET_CONFIG, conn)
+                if load_res["status"] != "ok":
+                    st.write(load_res["message"])
+                    write_st.update(label="Writing to Database", state="error", expanded=True)
+                    st.stop()
+
+                st.write(load_res["message"])
+                write_st.update(label="Writing to Database", state="complete", expanded=True)
+            finally:
+                conn.close()
 
 
 

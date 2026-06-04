@@ -3,14 +3,27 @@ import streamlit as st
 from pathlib import Path
 from ml.ops.concat import concat_files
 from ml.validators import validate_omega_name
+from ml.modeling import (
+    match_monthly_rate,
+    add_metadata,
+    adjust_configs,
+    convert_sheet_names_in_dict,
+    add_old_data
+)
 from etl.saver import save_cleaned_data
 from etl.strip_all import strip_all
 from etl.special_characters import special_char
+from supa.config import SHEET_CONFIG
 from supa.streamlit_functions import get_client_list
 from supa.db import (
     init_supabase,
     get_branch_id,
     get_omega_currency,
+)
+from supa.modeling import (
+    normalize_all_dataframes,
+    normalize_string_columns,
+    clean_numeric_values
 )
 
 if "ptdb_supabase_client" not in st.session_state:
@@ -72,8 +85,6 @@ with col5:
     push = st.selectbox("💾 push", options=["d'ont push", "push"], index=0)
 
 
-cur_and_rate_sheets = ['sales by category']
-
 
 if st.button("▶ Run", type="primary", use_container_width=True):
 
@@ -110,8 +121,39 @@ if st.button("▶ Run", type="primary", use_container_width=True):
                 st.stop()
             st.write(name_val['msg'])
 
-        if prep_name in cur_and_rate_sheets: #################################    if cur and rate needed
-            currency = get_omega_currency(branch_id, supabase)
+
+        with st.status("Formatitng...", expanded=True) as form_st:
+            SHEET_CONFIG = adjust_configs(SHEET_CONFIG) ######################    "Sales" and "Sales. Cat."
+
+            data = match_monthly_rate(data)
+            meta_res = add_metadata(data, branch_id, supabase)
+            if meta_res['status'] != 'ok':
+                st.write(meta_res["message"])
+                form_st.update(label="Formatting", state="error", expanded=True)
+                st.stop()
+
+            data = normalize_all_dataframes(data)
+            data = convert_sheet_names_in_dict(data)
+
+            norm_res = normalize_string_columns(data)
+            if norm_res["status"] != "ok":
+                st.write(norm_res["message"])
+                form_st.update(label="Formatting", state="error", expanded=True)
+                st.stop()
+            data = norm_res["data"]
+            data = add_old_data(data)
+            data = clean_numeric_values(data)
+
+            save_cleaned_data(data, 'C:/Users/Gianni Habchi/Desktop', 'concat data la halla2.xlsx')
+
+            form_st.update(label="Formatting Data", state="complete", expanded=True)
+
+
+
+
+
+
+
 
 
 

@@ -1,5 +1,7 @@
 from supa.db import get_monthly_rates
 from etl.utils import make_columns_date
+from supa.db import get_omega_currency
+from ml.config import config_map
 
 
 def add_old_data(sheets_dict):
@@ -26,3 +28,47 @@ def match_monthly_rate(sheet):
     ).rename(columns={'average_monthly_rate': 'client_rate'}).drop(columns='date').copy()
 
     return {sheet_name: data}
+
+
+def add_metadata(sheet, branch_id, supabase):
+    sheet_name, data = next(iter(sheet.items()))
+
+    currency = get_omega_currency(branch_id, supabase)['omega_currency']
+
+    if not currency:
+        return {
+            'status': 'error',
+            'msg': 'Currency is not available in Database'
+        }
+
+    data['branch_id'] = branch_id
+    data['currency'] = currency
+    data['old_data'] = 1
+
+    return {
+        'status': 'ok',
+        'sheet': {sheet_name: data}
+    }
+
+
+def adjust_configs(sheet_config):
+
+    config = {
+        key: value
+        for key, value in sheet_config.items()
+        if key in ["Sales", "Sales. Cat."]
+    }
+
+    for sheet_name, conf in config.items():
+        conf['expected_columns'].append('old_data')
+
+    return config
+
+
+def convert_sheet_names_in_dict(sheet):
+
+    return {
+        config_map[key]: df
+        for key, df in sheet.items()
+        if key in config_map
+    }

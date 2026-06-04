@@ -2,7 +2,11 @@ import importlib
 import streamlit as st
 from pathlib import Path
 from ml.ops.concat import concat_files
-from ml.validators import validate_omega_name
+from ml.validators import (
+    validate_omega_name,
+    find_existing_data,
+    delete_existing_data
+)
 from ml.modeling import (
     match_monthly_rate,
     add_metadata,
@@ -18,7 +22,7 @@ from supa.streamlit_functions import get_client_list
 from supa.db import (
     init_supabase,
     get_branch_id,
-    get_omega_currency,
+    get_pg_connection
 )
 from supa.modeling import (
     normalize_all_dataframes,
@@ -53,7 +57,7 @@ st.set_page_config(
 st.title("Concat")
 st.markdown("---")
 
-col1, col2, col3, col4, col5 = st.columns(5)
+col1, col2, col3, col4, col5, col6 = st.columns(6)
 with col1:
     folder_input = st.text_input("📁 Target Folder Path", placeholder="C:/Path/To/Folder")
 with col2:
@@ -83,6 +87,8 @@ with col4:
         preprocess_func = None
 with col5:
     push = st.selectbox("💾 push", options=["d'ont push", "push"], index=0)
+with col6:
+    mode = st.selectbox("Select Mode", options=["Do not overwrite", "Overwrite"], index=0, key="ptdb_mode")
 
 
 
@@ -143,14 +149,48 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             data = norm_res["data"]
             data = add_old_data(data)
             data = clean_numeric_values(data)
+            st.write('Done')
 
             save_cleaned_data(data, 'C:/Users/Gianni Habchi/Desktop', 'concat data la halla2.xlsx')
 
             form_st.update(label="Formatting Data", state="complete", expanded=True)
 
 
+        with st.status("Checking existing data...", expanded=True) as exsting_data_st:
 
+            try:
+                conn = get_pg_connection()
+            except Exception as e:
+                st.error(f"❌ Could not connect to the database. Check that `host`, `name`, `user`, `password`, and `port` are set in Streamlit secrets.\n\n`{e}`")
+                exsting_data_st.update(label="Checking existing data", state="error", expanded=True)
+                st.stop()
+            conn.autocommit = False
 
+            chk_res = find_existing_data(conn, data, SHEET_CONFIG, branch_id)
+            if chk_res["status"] != "ok":
+                st.write(chk_res["msg"])
+                if mode != "Overwrite":
+                    st.write("Process cancelled because data already exists.")
+                    exsting_data_st.update(label="Checking existing data", state="error", expanded=True)
+                    conn.close()
+                    st.stop()
+
+                st.write("Existing data will be replaced.")
+                with st.status("Deleting existing data...", expanded=True) as del_st:
+                    del_res = delete_existing_data(conn, data, SHEET_CONFIG, branch_id)
+                    if del_res["status"] != "ok":
+                        st.write(del_res["msg"])
+                        del_st.update(label="Deleting existing data", state="error", expanded=True)
+                        conn.close()
+                        st.stop()
+                    st.write(del_res["msg"])
+                    del_st.update(label="Deleting existing data", state="complete", expanded=True)
+            else:
+                st.write(chk_res["msg"])
+
+            exsting_data_st.update(label="Checking existing data", state="complete", expanded=True)
+
+            
 
 
 

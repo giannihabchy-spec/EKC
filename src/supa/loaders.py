@@ -75,7 +75,7 @@ def extract_sheets_and_client(file_path, sheet_config):
         return sheets_dict, real_client, currency, rate, info
 
 
-def push_sheets(sheets: dict, sheet_config: dict, conn, quick_variance: bool = False):
+def push_sheets(sheets: dict, sheet_config: dict, conn, ingnore_missing_cols: bool = False):
     empty_sheets: list[str] = []
     loaded: list[str] = []
 
@@ -108,7 +108,7 @@ def push_sheets(sheets: dict, sheet_config: dict, conn, quick_variance: bool = F
                             cols_to_use.append(meta_col)
 
                     missing = [c for c in cols_to_use if c not in df.columns]
-                    if quick_variance:
+                    if ingnore_missing_cols:
                         cols_to_use = [c for c in cols_to_use if c in df.columns]
                     else:
                         if missing:

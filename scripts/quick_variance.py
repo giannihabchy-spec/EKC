@@ -6,7 +6,7 @@ import pandas as pd
 from supa.db import _ensure_supa_env_from_secrets
 
 st.set_page_config(
-    page_title="Auto Calc Pipeline",
+    page_title="Quick Variance",
     layout="wide",
     initial_sidebar_state="collapsed"
 )

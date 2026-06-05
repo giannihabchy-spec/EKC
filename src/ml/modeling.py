@@ -2,6 +2,7 @@ from supa.db import get_monthly_rates
 from etl.utils import make_columns_date
 from supa.db import get_omega_currency
 from ml.config import config_map
+from supa.config import SHEET_CONFIG
 
 
 def add_old_data(sheets_dict):
@@ -51,18 +52,28 @@ def add_metadata(sheet, branch_id, supabase):
     }
 
 
-def adjust_configs(sheet_config):
+def adjust_configs(prep_name):
 
     config = {
         key: value
-        for key, value in sheet_config.items()
-        if key in ["Sales", "Sales. Cat."]
+        for key, value in SHEET_CONFIG.items()
+        # if key in ["Sales", "Sales. Cat."]
+        if key == config_map.get(prep_name)
     }
+
+    if not config:
+        return {
+            'status': 'error',
+            'msg': 'Bel amaliyye nzid l preprocessor 3al config_map'
+        }
 
     for sheet_name, conf in config.items():
         conf['expected_columns'].append('old_data')
 
-    return config
+    return {
+        'status': 'ok',
+        'conf': config
+    }
 
 
 def convert_sheet_names_in_dict(sheet):

@@ -130,7 +130,13 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
 
         with st.status("Formatitng...", expanded=True) as form_st:
-            SHEET_CONFIG = adjust_configs(SHEET_CONFIG) ######################    "Sales" and "Sales. Cat."
+            adj_res = adjust_configs(prep_name)
+            if adj_res['status'] != 'ok':
+                st.write(adj_res["msg"])
+                form_st.update(label="Formatting", state="error", expanded=True)
+                st.stop()
+            SHEET_CONFIG = adj_res['conf']
+
 
             data = match_monthly_rate(data)
             meta_res = add_metadata(data, branch_id, supabase)

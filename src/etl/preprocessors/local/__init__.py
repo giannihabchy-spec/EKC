@@ -1,18 +1,20 @@
-from . import discount_by_category
-from . import discount_by_description_by_server
-from . import discount_by_invoive_by_details
-from . import discount_by_items
-from . import inventory_history
-from . import inventory_production
-from . import inventory_summary_of_sales_by_customer_by_items
-from . import inventory_wastage_items
-from . import list_sales_items
-from . import programming_summary_inventory
-from . import purchase_with_all_details
-from . import requisition_summary
-from . import sales_by_menu_by_items
-from . import sales_summary_of_sales_by_customer_by_items
-from . import sales_wastage_items
-from . import sales_items_ingredients
-from . import inventory_items_ingredients_qtp
-from . import sales_by_category
+from . import (
+    discount_by_category,
+    discount_by_description_by_server,
+    discount_by_invoive_by_details,
+    discount_by_items,
+    inventory_history,
+    inventory_production,
+    inventory_summary_of_sales_by_customer_by_items,
+    inventory_wastage_items,
+    list_sales_items,
+    programming_summary_inventory,
+    purchase_with_all_details,
+    requisition_summary,
+    sales_by_menu_by_items,
+    sales_summary_of_sales_by_customer_by_items,
+    sales_wastage_items,
+    sales_items_ingredients,
+    inventory_items_ingredients_qtp,
+    sales_by_category,
+)

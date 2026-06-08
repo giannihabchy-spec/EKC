@@ -14,6 +14,7 @@ from ml.modeling import (
     convert_sheet_names_in_dict,
     add_old_data
 )
+from ml.specials.sales_by_items import special_treatment
 from etl.saver import save_cleaned_data
 from etl.strip_all import strip_all
 from etl.special_characters import special_char
@@ -110,7 +111,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
         data = strip_all(data)
         data = special_char(data)
-        save_cleaned_data(data, destination,final_name)
+        # save_cleaned_data(data, destination,final_name) ###################    save
         st.write('Data is Filtered')
 
         filter_st.update(state="complete",expanded=True)
@@ -154,13 +155,33 @@ if st.button("▶ Run", type="primary", use_container_width=True):
                 form_st.update(label="Formatting", state="error", expanded=True)
                 st.stop()
             data = norm_res["data"]
-            data = add_old_data(data)
+            # data = add_old_data(data) ############################### lezem chila
             data = clean_numeric_values(data)
             st.write('Done')
 
-            # save_cleaned_data(data, 'C:/Users/Gianni Habchi/Desktop', 'concat data la halla2.xlsx')
-
+            # data = strip_all(data)
+            # data = special_char(data)
+            # save_cleaned_data(data, destination, 'concat data la halla2.xlsx')
+            # st.stop()
             form_st.update(label="Formatting Data", state="complete", expanded=True)
+
+
+###################################################################################################################################
+        
+        
+        if prep_name == 'sales by items':
+            with st.status("Special treatment...", expanded=True) as special_st:
+                data = special_treatment(branch_id, data)
+                st.write('Done')
+
+                data = strip_all(data)
+                data = special_char(data)
+                save_cleaned_data(data, destination, 'After merge.xlsx')
+
+                special_st.update(label="Special treatment", state="complete", expanded=True)
+
+
+###################################################################################################################################
 
 
         with st.status("Checking existing data...", expanded=True) as exsting_data_st:
@@ -200,7 +221,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
         with st.status("Writing to Database...", expanded=True) as write_st:
             try:
-                load_res = push_sheets(data, SHEET_CONFIG, conn)
+                load_res = push_sheets(data, SHEET_CONFIG, conn, True)
                 if load_res["status"] != "ok":
                     st.write(load_res["message"])
                     write_st.update(label="Writing to Database", state="error", expanded=True)

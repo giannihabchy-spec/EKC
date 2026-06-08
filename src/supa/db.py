@@ -183,3 +183,23 @@ def get_monthly_rates():
     conn.close()
 
     return data
+
+
+def get_last_sp(branch_id):
+    conn = get_pg_connection()
+
+    query = """
+        SELECT *
+        FROM public.ac_selling_prices
+        WHERE branch_id = %s
+          AND report_date = (
+              SELECT MAX(report_date)
+              FROM public.ac_selling_prices
+              WHERE branch_id = %s
+          );
+    """
+
+    data = pd.read_sql(query, conn, params=(branch_id, branch_id))
+    conn.close()
+
+    return data

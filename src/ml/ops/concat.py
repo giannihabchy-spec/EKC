@@ -1,5 +1,6 @@
 from pathlib import Path
 import pandas as pd
+import os
 
 
 def concat_files(folder_path, preprocessing_func):
@@ -27,6 +28,8 @@ def concat_files(folder_path, preprocessing_func):
 
     for file_path in excel_files:
         df = preprocessing_func(file_path)
+        file__name = os.path.basename(file_path)
+        df['file__name'] = file__name
         all_dfs.append(df)
 
     combined_df = pd.concat(all_dfs, ignore_index=True)

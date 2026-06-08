@@ -23,6 +23,29 @@ def validate_omega_name(sheets_dict, branch_id, supabase):
     }
 
 
+def validate_date(sheet):
+    data = next(iter(sheet.values()))
+    data = data[['report_date', 'file__name']].drop_duplicates()
+    dups = []
+
+    for i in data['report_date'].drop_duplicates():
+        if len(data[data['report_date'] == i]) > 1:
+            files = list(data.loc[data['report_date'] == i, 'file__name'])
+            string_files = ', '.join(files)
+            dups.append(f"Files '{string_files}' contain the same report date: '{str(i).split()[0]}'")
+    
+    if dups:
+        return {
+            'status': 'error',
+            'msg': '    \n'.join(dups)
+        }
+    
+    return {
+        'status': 'ok',
+        'msg': 'Dates Checked',
+    }
+
+
 def find_existing_data(conn, sheet, sheet_config, branch_id):
     conn.rollback()
 

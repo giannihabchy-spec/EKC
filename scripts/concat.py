@@ -4,6 +4,7 @@ from pathlib import Path
 from ml.ops.concat import concat_files
 from ml.validators import (
     validate_omega_name,
+    validate_date,
     find_existing_data,
     delete_existing_data
 )
@@ -12,7 +13,6 @@ from ml.modeling import (
     add_metadata,
     adjust_configs,
     convert_sheet_names_in_dict,
-    add_old_data
 )
 from ml.specials.sales_by_items import special_treatment
 from etl.saver import save_cleaned_data
@@ -111,7 +111,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
         data = strip_all(data)
         data = special_char(data)
-        # save_cleaned_data(data, destination,final_name) ###################    save
+        save_cleaned_data(data, destination) ###################    save
         st.write('Data is Filtered')
 
         filter_st.update(state="complete",expanded=True)
@@ -128,6 +128,15 @@ if st.button("▶ Run", type="primary", use_container_width=True):
                 validating_st.update(label="Validating", state="error", expanded=True)
                 st.stop()
             st.write(name_val['msg'])
+
+            date_val = validate_date(data)
+            if date_val['status'] != 'ok':
+                st.write(date_val['msg'])
+                validating_st.update(label="Validating", state="error", expanded=True)
+                st.stop()
+            st.write(date_val['msg'])
+
+            validating_st.update(label="Formatting Data", state="complete", expanded=True)
 
 
         with st.status("Formatitng...", expanded=True) as form_st:
@@ -155,13 +164,12 @@ if st.button("▶ Run", type="primary", use_container_width=True):
                 form_st.update(label="Formatting", state="error", expanded=True)
                 st.stop()
             data = norm_res["data"]
-            # data = add_old_data(data) ############################### lezem chila
             data = clean_numeric_values(data)
             st.write('Done')
 
-            # data = strip_all(data)
-            # data = special_char(data)
-            # save_cleaned_data(data, destination, 'concat data la halla2.xlsx')
+            data = strip_all(data)
+            data = special_char(data)
+            save_cleaned_data(data, destination, 'after formatting.xlsx')
             # st.stop()
             form_st.update(label="Formatting Data", state="complete", expanded=True)
 
@@ -172,11 +180,12 @@ if st.button("▶ Run", type="primary", use_container_width=True):
         if prep_name == 'sales by items':
             with st.status("Special treatment...", expanded=True) as special_st:
                 data = special_treatment(branch_id, data)
-                st.write('Done')
 
                 data = strip_all(data)
                 data = special_char(data)
                 save_cleaned_data(data, destination, 'After merge.xlsx')
+
+                st.write('Done')
 
                 special_st.update(label="Special treatment", state="complete", expanded=True)
 

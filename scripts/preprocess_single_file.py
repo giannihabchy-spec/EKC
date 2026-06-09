@@ -59,12 +59,12 @@ st.markdown("---")
 
 col1, col2, col3, col4 = st.columns(4) # , col5, col6
 with col1:
-    folder_input = st.text_input("📁 Target Folder Path", placeholder="C:/Path/To/Folder")
+    folder_input = st.text_input("Target Folder Path", placeholder="C:/Path/To/Folder")
 with col2:
     client_options = get_client_list(supabase)
     selected_client = st.selectbox("Select Branch", options=client_options, key="ptdb_client")
 with col3:
-    source = st.selectbox("🔀 Source", options=["cloud", "local"], index=0)
+    source = st.selectbox("Source", options=["cloud", "local"], index=0)
 with col4:
     preprocessor_options = _list_preprocessors(source)
     if preprocessor_options:
@@ -86,7 +86,7 @@ with col4:
         preprocessor = None
         preprocess_func = None
 with col1:
-    push = st.selectbox("💾 push", options=["d'ont push", "push"], index=0)
+    push = st.selectbox("push", options=["don't push", "push"], index=0)
 with col2:
     mode = st.selectbox("Select Mode", options=["Do not overwrite", "Overwrite"], index=0, key="ptdb_mode")
 with col3:
@@ -159,9 +159,14 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             data = clean_numeric_values(data)
             st.write('Done')
 
+
+            # data = strip_all({prep_name: data})
+            # data = special_char(data)
+            # save_cleaned_data(data, 'C:/Users/Gianni Habchi/Desktop', 'final check.xlsx')
+            # st.write('heheeee')
+
             form_st.update(label="Formatting Data", state="complete", expanded=True)
-            save_cleaned_data(data, 'C:/Users/Gianni Habchi/Desktop', 'one file 3an jdid.xlsx')
-            st.stop()
+            # st.stop()
 
 
         with st.status("Checking existing data...", expanded=True) as exsting_data_st:

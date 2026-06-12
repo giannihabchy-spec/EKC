@@ -185,16 +185,16 @@ def get_monthly_rates():
     return data
 
 
-def get_last_sp(branch_id):
+def get_last_table(branch_id, table_name):
     conn = get_pg_connection()
 
-    query = """
+    query = f"""
         SELECT *
-        FROM public.ac_selling_prices
+        FROM public.{table_name}
         WHERE branch_id = %s
           AND report_date = (
               SELECT MAX(report_date)
-              FROM public.ac_selling_prices
+              FROM public.{table_name}
               WHERE branch_id = %s
           );
     """
@@ -203,3 +203,83 @@ def get_last_sp(branch_id):
     conn.close()
 
     return data
+
+
+# def get_last_sp(branch_id):
+#     conn = get_pg_connection()
+
+#     query = """
+#         SELECT *
+#         FROM public.ac_selling_prices
+#         WHERE branch_id = %s
+#           AND report_date = (
+#               SELECT MAX(report_date)
+#               FROM public.ac_selling_prices
+#               WHERE branch_id = %s
+#           );
+#     """
+
+#     data = pd.read_sql(query, conn, params=(branch_id, branch_id))
+#     conn.close()
+
+#     return data
+
+
+# def get_last_recipes(branch_id):
+#     conn = get_pg_connection()
+
+#     query = """
+#         SELECT *
+#         FROM public.ac_recipes
+#         WHERE branch_id = %s
+#           AND report_date = (
+#               SELECT MAX(report_date)
+#               FROM public.ac_recipes
+#               WHERE branch_id = %s
+#           );
+#     """
+
+#     data = pd.read_sql(query, conn, params=(branch_id, branch_id))
+#     conn.close()
+
+#     return data
+
+
+# def get_last_sub_recipes(branch_id):
+#     conn = get_pg_connection()
+
+#     query = """
+#         SELECT *
+#         FROM public.ac_sub_recipes
+#         WHERE branch_id = %s
+#           AND report_date = (
+#               SELECT MAX(report_date)
+#               FROM public.ac_sub_recipes
+#               WHERE branch_id = %s
+#           );
+#     """
+
+#     data = pd.read_sql(query, conn, params=(branch_id, branch_id))
+#     conn.close()
+
+#     return data
+
+
+# def get_last_uc(branch_id):
+#     conn = get_pg_connection()
+
+#     query = """
+#         SELECT *
+#         FROM public.ac_unit_cost
+#         WHERE branch_id = %s
+#           AND report_date = (
+#               SELECT MAX(report_date)
+#               FROM public.ac_unit_cost
+#               WHERE branch_id = %s
+#           );
+#     """
+
+#     data = pd.read_sql(query, conn, params=(branch_id, branch_id))
+#     conn.close()
+
+#     return data

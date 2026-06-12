@@ -14,7 +14,7 @@ from ml.modeling import (
     adjust_configs,
     convert_sheet_names_in_dict,
 )
-from ml.specials.sales_by_items import special_treatment
+from ml.specials.sales_by_items import special_treatment as special_sales_by_items
 from etl.saver import save_cleaned_data
 from etl.strip_all import strip_all
 from etl.special_characters import special_char
@@ -179,7 +179,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
         
         if prep_name == 'sales by items':
             with st.status("Special treatment...", expanded=True) as special_st:
-                data = special_treatment(branch_id, data)
+                data = special_sales_by_items(branch_id, data)
 
                 data = strip_all(data)
                 data = special_char(data)
@@ -188,6 +188,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
                 st.write('Done')
 
                 special_st.update(label="Special treatment", state="complete", expanded=True)
+                st.stop()
 
 
 ###################################################################################################################################

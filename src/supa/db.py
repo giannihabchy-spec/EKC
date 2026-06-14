@@ -205,81 +205,43 @@ def get_last_table(branch_id, table_name):
     return data
 
 
-# def get_last_sp(branch_id):
-#     conn = get_pg_connection()
+def get_branch_id_from_omega_name(omega_client, supabase):
 
-#     query = """
-#         SELECT *
-#         FROM public.ac_selling_prices
-#         WHERE branch_id = %s
-#           AND report_date = (
-#               SELECT MAX(report_date)
-#               FROM public.ac_selling_prices
-#               WHERE branch_id = %s
-#           );
-#     """
+    try:
+        response = (
+            supabase
+            .table("branches")
+            .select("id, omega_name")
+            .contains("omega_name", [omega_client])
+            .execute()
+        )
+    except Exception as e:
+        msg = f"⚠️ Failed to fetch client '{omega_client}' from clients table: {e}"
+        return {
+            "status": "error",
+            "message": msg,
+            "branch_id": None
+        }
 
-#     data = pd.read_sql(query, conn, params=(branch_id, branch_id))
-#     conn.close()
+    rows = response.data if response and hasattr(response, "data") else []
 
-#     return data
+    if not rows:
+        msg = f"⚠️ Client '{omega_client}' was not found in the clients table"
+        return {
+            "status": "error",
+            "message": msg,
+            "branch_id": None
+        }
 
+    if len(rows) > 1:
+        msg = f"⚠️ Multiple clients found for '{omega_client}' in the clients table"
+        return {
+            "status": "error",
+            "message": msg,
+            "branch_id": None
+        }
 
-# def get_last_recipes(branch_id):
-#     conn = get_pg_connection()
-
-#     query = """
-#         SELECT *
-#         FROM public.ac_recipes
-#         WHERE branch_id = %s
-#           AND report_date = (
-#               SELECT MAX(report_date)
-#               FROM public.ac_recipes
-#               WHERE branch_id = %s
-#           );
-#     """
-
-#     data = pd.read_sql(query, conn, params=(branch_id, branch_id))
-#     conn.close()
-
-#     return data
-
-
-# def get_last_sub_recipes(branch_id):
-#     conn = get_pg_connection()
-
-#     query = """
-#         SELECT *
-#         FROM public.ac_sub_recipes
-#         WHERE branch_id = %s
-#           AND report_date = (
-#               SELECT MAX(report_date)
-#               FROM public.ac_sub_recipes
-#               WHERE branch_id = %s
-#           );
-#     """
-
-#     data = pd.read_sql(query, conn, params=(branch_id, branch_id))
-#     conn.close()
-
-#     return data
-
-
-# def get_last_uc(branch_id):
-#     conn = get_pg_connection()
-
-#     query = """
-#         SELECT *
-#         FROM public.ac_unit_cost
-#         WHERE branch_id = %s
-#           AND report_date = (
-#               SELECT MAX(report_date)
-#               FROM public.ac_unit_cost
-#               WHERE branch_id = %s
-#           );
-#     """
-
-#     data = pd.read_sql(query, conn, params=(branch_id, branch_id))
-#     conn.close()
-
-#     return data
+    return {
+            "status": "ok",
+            "branch_id": rows[0]["id"]
+        }

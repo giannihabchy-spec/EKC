@@ -472,7 +472,7 @@ def validate_currency_rate(branch_id, file_cur, file_rate):
     if not condition1:
         return {
             'status': 'error',
-            'msg': f"Client's currency '{client_cur}' is different from the rate in Info '{file_cur}'"
+            'msg': f"Client's currency '{client_cur}' is different from the currency in Info '{file_cur}'"
         }
     
     if not condition2:

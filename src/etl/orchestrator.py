@@ -49,7 +49,8 @@ cleaner_by_code = {
         'rep_s_00138.xls': ('sales by menu by items', local.sales_by_menu_by_items.preprocess),
         'rep_i_00268_s.xls': ('sales / summary of sales by customer by items', local.sales_summary_of_sales_by_customer_by_items.preprocess),
         'rep_i_0074.xls': ('sales wastage items', local.sales_wastage_items.preprocess),
-        "rep_s_00135.xls": ("sales by category", local.sales_by_category.preprocess)
+        "rep_s_00135.xls": ("sales by category", local.sales_by_category.preprocess),
+        "rep_s_00155.xls": ("daily sales by group", local.daily_sales_by_group.preprocess)
     }
 }
 

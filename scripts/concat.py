@@ -59,7 +59,7 @@ st.set_page_config(
 st.title("Concat")
 st.markdown("---")
 
-col1, col2, col3, col4, col5, col6 = st.columns(6)
+col1, col2, col3 = st.columns(3)
 with col1:
     folder_input = st.text_input("Target Folder Path", placeholder="C:/Path/To/Folder")
 with col2:
@@ -67,7 +67,7 @@ with col2:
     selected_client = st.selectbox("Select Branch", options=client_options, key="ptdb_client")
 with col3:
     source = st.selectbox("Source", options=["cloud", "local"], index=0)
-with col4:
+with col1:
     preprocessor_options = _list_preprocessors(source)
     if preprocessor_options:
         preprocessor = st.selectbox(
@@ -87,9 +87,9 @@ with col4:
         )
         preprocessor = None
         preprocess_func = None
-with col5:
+with col2:
     push = st.selectbox("push", options=["don't push", "push"], index=0)
-with col6:
+with col3:
     mode = st.selectbox("Select Mode", options=["Do not overwrite", "Overwrite"], index=0, key="ptdb_mode")
 
 

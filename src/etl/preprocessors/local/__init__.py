@@ -17,4 +17,5 @@ from . import (
     sales_items_ingredients,
     inventory_items_ingredients_qtp,
     sales_by_category,
+    daily_sales_by_group
 )

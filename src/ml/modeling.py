@@ -1,3 +1,4 @@
+import pandas as pd
 from supa.db import get_monthly_rates
 from etl.utils import make_columns_date
 from supa.db import get_omega_currency
@@ -20,13 +21,18 @@ def match_monthly_rate(sheet):
 
     data = make_columns_date(data, ['report_date'])
     rates = make_columns_date(rates, ['date'])
+    rates = rates.rename(columns = {'date': 'rates_date'})
 
     data = data.merge(
-        rates[['date','average_monthly_rate']],
+        rates[['rates_date','average_monthly_rate']],
         left_on='report_date',
-        right_on='date',
+        right_on='rates_date',
         how='left'
-    ).rename(columns={'average_monthly_rate': 'client_rate'}).drop(columns='date').copy()
+    ).rename(columns={'average_monthly_rate': 'client_rate'}).drop(columns='rates_date').copy()
+
+    data['report_date'] = pd.to_datetime(data['report_date'])
+    data.loc[data['report_date'].dt.year >= 2026, 'client_rate'] = 89000
+    data = make_columns_date(data, ['report_date'])
 
     return {sheet_name: data}
 

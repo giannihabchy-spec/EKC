@@ -10,19 +10,27 @@ def load_daily_sales(branch_id: int) -> pd.DataFrame:
     """
     conn = get_pg_connection()
     query = """
-        SELECT date, category, item_group, sales
+        SELECT date, category, item_group, sales, currency, client_rate
         FROM public.ac_daily_sales
         WHERE branch_id = %s
         ORDER BY category, item_group, date
     """
-    df = pd.read_sql(query, conn, params=(branch_id,))
+    data = pd.read_sql(query, conn, params=(branch_id,))
     conn.close()
 
-    df["date"] = pd.to_datetime(df["date"])
-    df["sales"] = pd.to_numeric(df["sales"], errors="coerce")
-    df = df.dropna(subset=["date", "category", "item_group", "sales"])
+    data["date"] = pd.to_datetime(data["date"])
+    data["sales"] = pd.to_numeric(data["sales"], errors="coerce")
+    data = data.dropna(subset=["date", "category", "item_group", "sales"])
 
-    return df
+    if (data["currency"] == "Unknown").any():
+        raise ValueError("Unknown currency found")
+
+    mask = data['currency'] != 'Usd'
+
+    data['original_sales'] = data['sales']
+    data.loc[mask, 'sales'] = data.loc[mask, 'original_sales'] / data.loc[mask, 'client_rate']
+
+    return data
 
 
 

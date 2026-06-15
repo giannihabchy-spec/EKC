@@ -89,3 +89,25 @@ def convert_sheet_names_in_dict(sheet):
         for key, df in sheet.items()
         if key in config_map
     }
+
+
+def get_series(df: pd.DataFrame, group_by: str = "item_group") -> dict[str, pd.Series]:
+    """
+    Split the flat DataFrame into one time series per group.
+
+    group_by: "category" or "item_group"
+
+    Returns:
+        { group_name: pd.Series(sales, index=date, freq inferred) }
+    """
+    series = {}
+    for name, group in df.groupby(group_by):
+        s = (
+            group.groupby("date")["sales"]
+            .sum()
+            .sort_index()
+            .asfreq("D")           # daily frequency, NaN on missing days
+            .fillna(0)
+        )
+        series[name] = s
+    return series

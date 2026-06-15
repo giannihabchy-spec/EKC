@@ -1,3 +1,4 @@
+import pandas as pd
 from supa.db import get_branch_omega_name
 from supa.validators import safe_ident
 from etl.utils import make_columns_date
@@ -166,3 +167,22 @@ def delete_existing_data(conn, sheet, sheet_config, branch_id):
         "status": "warning",
         "msg": "Existing data is not old"
     }
+
+
+def describe_series(series: dict[str, pd.Series]) -> pd.DataFrame:
+    """Quick summary of each series — useful for sanity-checking before modeling."""
+    rows = []
+    for name, s in series.items():
+        rows.append({
+            "group": name,
+            "start": s.index.min().date(),
+            "end": s.index.max().date(),
+            "days": len(s),
+            "zeros": (s == 0).sum(),
+            "nulls": s.isna().sum(),
+            "mean": round(s.mean(), 2),
+            "std": round(s.std(), 2),
+            "min": round(s.min(), 2),
+            "max": round(s.max(), 2),
+        })
+    return pd.DataFrame(rows)

@@ -120,7 +120,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
     if push == 'push': #######################################################    if push
 
         with st.status("Validating...", expanded=True) as validating_st:
-            qr_res = get_branch_id(selected_client, supabase)
+            qr_res = get_branch_id(selected_client)
             branch_id = qr_res["branch_id"]
 
             name_val = validate_omega_name(data, branch_id, supabase)

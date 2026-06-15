@@ -40,7 +40,7 @@ def match_monthly_rate(sheet):
 def add_metadata(sheet, branch_id, supabase):
     sheet_name, data = next(iter(sheet.items()))
 
-    currency = get_omega_currency(branch_id, supabase)['omega_currency']
+    currency = get_omega_currency(branch_id)['omega_currency']
 
     if not currency:
         return {

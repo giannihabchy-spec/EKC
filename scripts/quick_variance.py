@@ -117,13 +117,13 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
     with st.status("Extracting Info...", expanded=True) as status_ext_info:
 
-        qr_res = get_branch_id(selected_client, supabase)
+        qr_res = get_branch_id(selected_client)
         if qr_res["status"] != "ok":
             st.write(qr_res["message"])
             status_ext_info.update(label="Extracting Info", state="error", expanded=True)
             st.stop()
         branch_id = qr_res["branch_id"]
-        omega_name = get_branch_omega_name(branch_id, supabase)['omega_name'] #######################################
+        omega_name = get_branch_omega_name(branch_id)['omega_name'] #######################################
         report_date = pd.to_datetime(selected_period)
         jobs = get_jobs(source)
 

@@ -15,6 +15,13 @@ for key in ["url", "key", "host", "port", "name", "user", "password"]:
     if key in secrets:
         os.environ[key] = str(secrets[key])
 
+def init_supabase():
+    url: str = os.getenv("url")
+    key: str = os.getenv("key")
+    return supabase_init(url, key)
+
+supabase = init_supabase()
+
 
 def get_pg_connection():
     return psycopg2.connect(
@@ -27,13 +34,7 @@ def get_pg_connection():
     )
 
 
-def init_supabase():
-    url: str = os.getenv("url")
-    key: str = os.getenv("key")
-    return supabase_init(url, key)
-
-
-def get_branch_id(branch_name, supabase):
+def get_branch_id(branch_name):
 
     try:
         response = (
@@ -75,7 +76,7 @@ def get_branch_id(branch_name, supabase):
         }
 
 
-def get_branch_omega_name(branch_id, supabase):
+def get_branch_omega_name(branch_id):
     try:
         response = (
             supabase
@@ -134,7 +135,7 @@ def _ensure_supa_env_from_secrets():
             os.environ[env_key] = str(val)
 
 
-def get_omega_currency(branch_id, supabase):
+def get_omega_currency(branch_id):
 
     try:
         response = (
@@ -205,7 +206,7 @@ def get_last_table(branch_id, table_name):
     return data
 
 
-def get_branch_id_from_omega_name(omega_client, supabase):
+def get_branch_id_from_omega_name(omega_client):
 
     try:
         response = (

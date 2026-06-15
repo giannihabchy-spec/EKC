@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 import re
-from supa.db import get_branch_id, get_branch_omega_name, get_pg_connection
+from supa.db import get_pg_connection
 
 
 def validate_client_name(real_client, entered_client):

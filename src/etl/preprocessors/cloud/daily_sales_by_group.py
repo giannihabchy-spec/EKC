@@ -30,7 +30,7 @@ def preprocess(path, omega_loc: bool = False):
 
     omega_client = get_omega_client_name(data)
 
-    branch_id = get_branch_id_from_omega_name(omega_client, supabase)['branch_id']
+    branch_id = get_branch_id_from_omega_name(omega_client)['branch_id']
     sp = get_last_table(branch_id, 'ac_selling_prices').rename(columns = {'item_group': 'group'})
 
     data = data.iloc[3:-1,2:].copy().reset_index(drop=True)

@@ -78,7 +78,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             st.stop()
         st.write(sht_st['message'])
 
-        qr_res = get_branch_id(selected_client, supabase)
+        qr_res = get_branch_id(selected_client)
 
         if qr_res["status"] != "ok":
             st.write(qr_res["message"])

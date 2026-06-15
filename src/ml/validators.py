@@ -4,7 +4,7 @@ from etl.utils import make_columns_date
 
 
 def validate_omega_name(sheets_dict, branch_id, supabase):
-    supa_list = get_branch_omega_name(branch_id, supabase)['omega_name']
+    supa_list = get_branch_omega_name(branch_id)['omega_name']
 
     data = next(iter(sheets_dict.values()))
 

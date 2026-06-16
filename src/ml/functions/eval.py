@@ -19,3 +19,15 @@ def evaluate_model(model, val):
         "RMSE": rmse,
         "MAPE": mape
     }
+
+
+def compute_metrics(actual, forecast):
+    """Generic metric computation — works with any model (XGBoost, Prophet, etc.)"""
+    actual = np.array(actual)
+    forecast = np.array(forecast)
+
+    mae  = mean_absolute_error(actual, forecast)
+    rmse = np.sqrt(mean_squared_error(actual, forecast))
+    mape = mean_absolute_percentage_error(actual, forecast)
+
+    return {"MAE": mae, "RMSE": rmse, "MAPE": mape}

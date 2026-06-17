@@ -2,8 +2,14 @@ import pandas as pd
 from supa.db import get_monthly_rates
 from etl.utils import make_columns_date
 from supa.db import get_omega_currency
-from ml.config import config_map
+from ml.config import (
+    config_map,
+    TRAIN_RATIO,
+    VAL_RATIO
+)
 from supa.config import SHEET_CONFIG
+from ml.config import LAGS, ROLLS
+
 
 
 def add_old_data(sheets_dict):
@@ -108,6 +114,39 @@ def get_series(df: pd.DataFrame, group_by: str = "item_group") -> dict[str, pd.S
             .sort_index()
             .asfreq("D")           # daily frequency, NaN on missing days
             .fillna(0)
-        )
+        ).round().astype(int)
         series[name] = s
     return series
+
+
+def _split(s: pd.Series) -> tuple[pd.Series, pd.Series, pd.Series]:
+    n = len(s)
+    if n < 20:
+        raise ValueError(
+            f"Series '{s.name}' has only {n} days — too short to split 70/15/15."
+        )
+    train_end = int(n * TRAIN_RATIO)
+    val_end   = int(n * (TRAIN_RATIO + VAL_RATIO))
+    return s.iloc[:train_end], s.iloc[train_end:val_end], s.iloc[val_end:]
+
+
+def _make_features(s: pd.Series) -> pd.DataFrame:
+
+    df = s.rename("sales").to_frame()
+
+    df["day_of_week"] = df.index.dayofweek
+    df["day_of_month"] = df.index.day
+    df["month"] = df.index.month
+    df["year"] = df.index.year
+    df["weekofyear"] = df.index.isocalendar().week.astype(int)
+    df["is_weekend"] = (df.index.dayofweek >= 5).astype(int)
+
+    for lag in LAGS:
+        df[f"lag_{lag}"] = df["sales"].shift(lag)
+
+    for window in ROLLS:
+        df[f"roll_mean_{window}"] = df["sales"].shift(1).rolling(window).mean()
+        df[f"roll_std_{window}"]  = df["sales"].shift(1).rolling(window).std()
+
+    df = df.dropna()
+    return df

@@ -2,22 +2,8 @@ import pandas as pd
 import numpy as np
 from pmdarima import auto_arima
 from ml.functions.eval import evaluate_model
-
-
-SEASONAL_PERIOD = 7   # weekly seasonality for daily sales
-TRAIN_RATIO = 0.70
-VAL_RATIO   = 0.15
-
-
-def _split(s: pd.Series) -> tuple[pd.Series, pd.Series, pd.Series]:
-    n = len(s)
-    if n < 20:
-        raise ValueError(
-            f"Series '{s.name}' has only {n} days — too short to split 70/15/15."
-        )
-    train_end = int(n * TRAIN_RATIO)
-    val_end   = int(n * (TRAIN_RATIO + VAL_RATIO))
-    return s.iloc[:train_end], s.iloc[train_end:val_end], s.iloc[val_end:]
+from ml.modeling import _split
+from ml.config import SEASONAL_PERIOD
 
 
 def fit_sarima(s: pd.Series) -> dict:

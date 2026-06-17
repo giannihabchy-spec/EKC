@@ -1,53 +1,38 @@
 import pandas as pd
 import numpy as np
+from sklearn.metrics import mean_absolute_percentage_error
 from xgboost import XGBRegressor
+
 from ml.functions.eval import compute_metrics
-from ml.forecasting.sarima import _split
+from ml.modeling import (
+    _split,
+    _make_features,
+)
 
 
-LAGS     = [1, 2, 3, 7, 14, 21, 28]
-ROLLS    = [7, 14, 28]
 
 
-def _make_features(s: pd.Series) -> pd.DataFrame:
-    """
-    Build a feature DataFrame from a daily sales series.
-    Calendar features + lag features + rolling means.
-    """
-    df = s.rename("sales").to_frame()
 
-    df["day_of_week"] = df.index.dayofweek
-    df["day_of_month"] = df.index.day
-    df["month"] = df.index.month
-    df["is_weekend"] = (df.index.dayofweek >= 5).astype(int)
+def _base_model(early_stopping: bool = False) -> XGBRegressor:
+    params = dict(
+        n_estimators=500,
+        learning_rate=0.05,
+        max_depth=4,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        random_state=42,
+        eval_metric="rmse",
+        verbosity=0,
+    )
+    if early_stopping:
+        params["early_stopping_rounds"] = 30
+    return XGBRegressor(**params)
 
-    for lag in LAGS:
-        df[f"lag_{lag}"] = df["sales"].shift(lag)
 
-    for window in ROLLS:
-        df[f"roll_mean_{window}"] = df["sales"].shift(1).rolling(window).mean()
-        df[f"roll_std_{window}"]  = df["sales"].shift(1).rolling(window).std()
-
-    df = df.dropna()
-    return df
 
 
 def fit_xgboost(s: pd.Series) -> dict:
-    """
-    Fit XGBoost on train (70%), evaluate on val (15%), keep test (15%) untouched.
 
-    Returns the same result-dict shape as fit_sarima so they're interchangeable:
-        {
-            "model":        XGBRegressor,
-            "train":        pd.Series,
-            "val":          pd.Series,
-            "test":         pd.Series,
-            "val_metrics":  {"MAE", "RMSE", "MAPE"},
-            "val_forecast": pd.Series,
-            "status":       "ok" | "error",
-            "msg":          str,
-        }
-    """
     try:
         train, val, test = _split(s)
 
@@ -61,17 +46,7 @@ def fit_xgboost(s: pd.Series) -> dict:
         X_train, y_train = train_feat[feature_cols], train_feat["sales"]
         X_val,   y_val   = val_feat[feature_cols],   val_feat["sales"]
 
-        model = XGBRegressor(
-            n_estimators=500,
-            learning_rate=0.05,
-            max_depth=4,
-            subsample=0.8,
-            colsample_bytree=0.8,
-            random_state=42,
-            early_stopping_rounds=30,
-            eval_metric="rmse",
-            verbosity=0,
-        )
+        model = _base_model(early_stopping=True)
         model.fit(
             X_train, y_train,
             eval_set=[(X_val, y_val)],
@@ -170,4 +145,64 @@ def summary(results: dict[str, dict]) -> pd.DataFrame:
         if res["status"] == "ok":
             row.update(res["val_metrics"])
         rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def walk_forward_cv(s: pd.Series, model: XGBRegressor = None, n_rep: int = 5) -> pd.DataFrame:
+    """
+    Walk-forward CV where the last fold is exactly the real train/val split.
+
+    Args:
+        s:     full series (train + val + test)
+        model: unfitted XGBRegressor used as template (cloned each fold)
+        n_rep: number of folds
+
+    Returns:
+        DataFrame: fold, train_from, train_to, val_from, val_to, MAPE
+    """
+    from sklearn.base import clone
+
+    if model is None:
+        model = _base_model()
+
+    # anchor on the exact same split fit_xgboost uses
+    train, val, _ = _split(s)
+    features      = _make_features(s)
+    feature_cols  = [c for c in features.columns if c != "sales"]
+
+    # find positions in features (after dropna) that correspond to real boundaries
+    train_end_pos = features.index.searchsorted(train.index[-1], side="right")
+    val_end_pos   = features.index.searchsorted(val.index[-1],   side="right")
+    val_size      = val_end_pos - train_end_pos   # constant across all folds
+
+    rows = []
+    for i in range(n_rep):
+        # last fold (i = n_rep-1) → exactly train → val
+        steps_back    = (n_rep - 1 - i)
+        fold_val_end  = val_end_pos  - steps_back * val_size
+        fold_val_start= fold_val_end - val_size
+
+        if fold_val_start <= 0:
+            continue
+
+        X_train = features.iloc[:fold_val_start][feature_cols]
+        y_train = features.iloc[:fold_val_start]["sales"]
+        X_val   = features.iloc[fold_val_start:fold_val_end][feature_cols]
+        y_val   = features.iloc[fold_val_start:fold_val_end]["sales"]
+
+        m = clone(model)
+        m.fit(X_train, y_train, verbose=False)
+
+        preds = np.clip(m.predict(X_val), 0, None)
+        mape  = mean_absolute_percentage_error(y_val, preds)
+
+        rows.append({
+            "fold":       i + 1,
+            "train_from": X_train.index[0].date(),
+            "train_to":   X_train.index[-1].date(),
+            "val_from":   X_val.index[0].date(),
+            "val_to":     X_val.index[-1].date(),
+            "MAPE":       round(mape, 4),
+        })
+
     return pd.DataFrame(rows)

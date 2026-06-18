@@ -793,30 +793,30 @@ SHEET_CONFIG = {
         ]
     },
 
-    "Daily Sales": { ############################################################################################
-        "target_table": "ac_daily_sales",
+    # "Daily Sales": { ############################################################################################
+    #     "target_table": "ac_daily_sales",
 
-        "expected_columns": [
-            'category',
-            'item_group',
-            'date',
-            'sales', 
-        ],
+    #     "expected_columns": [
+    #         'category',
+    #         'item_group',
+    #         'date',
+    #         'sales', 
+    #     ],
 
-        "unique_key": [
-            "branch_id",
-            "date",
-            "item_group"
-        ],
+    #     "unique_key": [
+    #         "branch_id",
+    #         "date",
+    #         "item_group"
+    #     ],
 
-        "load_mode": "insert",
+    #     "load_mode": "insert",
 
-        "no_nulls": [
-            'category',
-            'item_group',
-            'date',
-            'sales', 
-        ]
-    },
+    #     "no_nulls": [
+    #         'category',
+    #         'item_group',
+    #         'date',
+    #         'sales', 
+    #     ]
+    # },
 
 }

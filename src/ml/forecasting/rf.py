@@ -5,12 +5,9 @@ from sklearn.metrics import mean_absolute_error, r2_score, mean_absolute_percent
 from sklearn.inspection import permutation_importance
 
 from ml.modeling import (
-    get_series,
     _split,
     _make_features
 )
-from ml.loaders import load_daily_sales
-
 
 def fit_rf(s: pd.Series) -> dict:
     train, val, test = _split(s)
@@ -118,25 +115,25 @@ def fit_rf(s: pd.Series) -> dict:
     }
 
 
-def fit_all_rf(branch_id, threshold: float = 0.1) -> dict:
-    data = load_daily_sales(branch_id)
-    series = get_series(data,'category')
+# def fit_all_rf(branch_id, threshold: float = 0.1) -> dict:
+#     data = load_daily_sales(branch_id)
+#     series = get_series(data,'category')
 
-    results = {}
-    for name, s in series.items():
-        near_zero_ratio = len(s[np.abs(s) < 10]) / len(s)
-        if near_zero_ratio > threshold:
-            results[name] = {
-                "status": "skipped",
-                "reason": f"{near_zero_ratio:.1%} of values are near-zero (threshold: {threshold:.1%})",
-            }
-            continue
+#     results = {}
+#     for name, s in series.items():
+#         near_zero_ratio = len(s[np.abs(s) < 10]) / len(s)
+#         if near_zero_ratio > threshold:
+#             results[name] = {
+#                 "status": "skipped",
+#                 "reason": f"{near_zero_ratio:.1%} of values are near-zero (threshold: {threshold:.1%})",
+#             }
+#             continue
 
-        try:
-            result = fit_rf(s)
-            result["status"] = "ok"
-            results[name] = result
-        except Exception as e:
-            results[name] = {"status": "error", "reason": str(e)}
+#         try:
+#             result = fit_rf(s)
+#             result["status"] = "ok"
+#             results[name] = result
+#         except Exception as e:
+#             results[name] = {"status": "error", "reason": str(e)}
 
-    return results
+#     return results

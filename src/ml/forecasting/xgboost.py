@@ -1,208 +1,123 @@
 import pandas as pd
-import numpy as np
-from sklearn.metrics import mean_absolute_percentage_error
 from xgboost import XGBRegressor
-
-from ml.functions.eval import compute_metrics
+from sklearn.metrics import mean_absolute_error
+from sklearn.inspection import permutation_importance
 from ml.modeling import (
+    get_series,
     _split,
-    _make_features,
+    _make_features
 )
+from ml.loaders import load_daily_sales
 
 
+def fit_xgb(s: pd.Series) -> dict:
+    train, val, test = _split(s)
 
+    full_features = _make_features(s)
+    train_feat = full_features.loc[full_features.index.isin(train.index)]
+    val_feat   = full_features.loc[full_features.index.isin(val.index)]
+    test_feat  = full_features.loc[full_features.index.isin(test.index)]
 
+    feature_cols = [c for c in full_features.columns if c != "sales"]
 
-def _base_model(early_stopping: bool = False) -> XGBRegressor:
-    params = dict(
-        n_estimators=500,
-        learning_rate=0.05,
-        max_depth=4,
-        subsample=0.8,
-        colsample_bytree=0.8,
+    x_train, y_train = train_feat[feature_cols], train_feat["sales"]
+    x_val, y_val     = val_feat[feature_cols], val_feat["sales"]
+    x_test, y_test   = test_feat[feature_cols], test_feat["sales"]
+
+    best_mae = float("inf")
+    best_params = None
+
+    for n_est in [100, 300, 500]:
+        for learning_rate in [0.01, 0.05, 0.1]:
+            for max_depth in [3, 5, 7]:
+                for subsample in [0.8, 1.0]:
+                    for colsample_bytree in [0.8, 1.0]:
+
+                        xgb = XGBRegressor(
+                            n_estimators=n_est,
+                            learning_rate=learning_rate,
+                            max_depth=max_depth,
+                            subsample=subsample,
+                            colsample_bytree=colsample_bytree,
+                            objective="reg:squarederror",
+                            random_state=42,
+                            n_jobs=-1,
+                            tree_method="hist"
+                        )
+
+                        xgb.fit(x_train, y_train)
+
+                        pred = xgb.predict(x_val)
+                        mae = mean_absolute_error(y_val, pred)
+
+                        if mae < best_mae:
+                            best_mae = mae
+                            best_params = {
+                                "n_estimators": n_est,
+                                "learning_rate": learning_rate,
+                                "max_depth": max_depth,
+                                "subsample": subsample,
+                                "colsample_bytree": colsample_bytree
+                            }
+
+    xgb = XGBRegressor(
+        **best_params,
+        objective="reg:squarederror",
         random_state=42,
-        eval_metric="rmse",
-        verbosity=0,
+        n_jobs=-1,
+        tree_method="hist"
     )
-    if early_stopping:
-        params["early_stopping_rounds"] = 30
-    return XGBRegressor(**params)
 
+    xgb.fit(x_train, y_train)
+    pred = xgb.predict(x_val)
 
+    result = permutation_importance(
+        xgb,
+        x_val,
+        y_val,
+        scoring="neg_mean_absolute_error",
+        n_repeats=10,
+        random_state=42,
+        n_jobs=-1
+    )
 
+    imp = pd.Series(
+        result.importances_mean,
+        index=x_val.columns
+    ).sort_values(ascending=False)
 
-def fit_xgboost(s: pd.Series) -> dict:
+    selected_features = imp[imp > 0].index.to_list()
 
-    try:
-        train, val, test = _split(s)
+    # fallback in case permutation importance selects nothing
+    if len(selected_features) == 0:
+        selected_features = feature_cols
 
-        full_features = _make_features(s)
+    new_x_train = x_train[selected_features]
+    new_x_val = x_val[selected_features]
 
-        train_feat = full_features.loc[full_features.index.isin(train.index)]
-        val_feat   = full_features.loc[full_features.index.isin(val.index)]
+    xgb.fit(new_x_train, y_train)
+    new_pred = xgb.predict(new_x_val)
 
-        feature_cols = [c for c in full_features.columns if c != "sales"]
+    mae = round(mean_absolute_error(y_val, pred), 2)
+    new_mae = round(mean_absolute_error(y_val, new_pred), 2)
 
-        X_train, y_train = train_feat[feature_cols], train_feat["sales"]
-        X_val,   y_val   = val_feat[feature_cols],   val_feat["sales"]
+    if new_mae <= mae:
+        final_features = selected_features
+    else:
+        final_features = feature_cols
 
-        model = _base_model(early_stopping=True)
-        model.fit(
-            X_train, y_train,
-            eval_set=[(X_val, y_val)],
-            verbose=False,
-        )
+    x_train_val = pd.concat([x_train, x_val])[final_features]
+    y_train_val = pd.concat([y_train, y_val])
+    x_test = x_test[final_features]
 
-        val_preds = np.clip(model.predict(X_val), 0, None)
-        metrics   = compute_metrics(y_val, val_preds)
+    xgb.fit(x_train_val, y_train_val)
+    final_pred = xgb.predict(x_test)
 
-        return {
-            "model":        model,
-            "train":        train,
-            "val":          val,
-            "test":         test,
-            "feature_cols": feature_cols,
-            "val_metrics":  metrics,
-            "val_forecast": pd.Series(val_preds, index=y_val.index, name=s.name),
-            "status":       "ok",
-            "msg":          "XGBoost",
-        }
+    final_mae = round(mean_absolute_error(y_test, final_pred), 2)
 
-    except Exception as e:
-        return {
-            "model":  None,
-            "status": "error",
-            "msg":    str(e),
-        }
-
-
-def fit_all(series: dict[str, pd.Series]) -> dict[str, dict]:
-    """Fit XGBoost on every series. Works for any number of groups."""
-    results = {}
-    for name, s in series.items():
-        s = s.copy()
-        s.name = name
-        results[name] = fit_xgboost(s)
-    return results
-
-
-def _recursive_forecast(s_history: pd.Series, model, feature_cols: list, n_periods: int) -> np.ndarray:
-    """
-    Predict n_periods ahead one step at a time, feeding each prediction
-    back as a lag feature for the next step.
-    """
-    history = list(s_history.values)
-
-    preds = []
-    for _ in range(n_periods):
-        tmp = pd.Series(history, index=pd.date_range(end="2000-01-01", periods=len(history), freq="D"))
-        feat_df = _make_features(tmp)
-        if feat_df.empty:
-            preds.append(np.nan)
-            history.append(np.nan)
-            continue
-        row = feat_df.iloc[[-1]][feature_cols]
-        pred = float(np.clip(model.predict(row), 0, None))
-        preds.append(pred)
-        history.append(pred)
-
-    return np.array(preds)
-
-
-def forecast_all(results: dict[str, dict], n_periods: int = 30) -> dict[str, pd.Series]:
-    """
-    Produce n_periods-ahead forecasts starting after the test set.
-
-    Returns:
-        { group_name: pd.Series(forecast, index=future_dates) }
-    """
-    forecasts = {}
-    for name, res in results.items():
-        if res["status"] != "ok":
-            continue
-
-        s_history = pd.concat([res["train"], res["val"], res["test"]])
-        last_date = res["test"].index[-1]
-        future_index = pd.date_range(
-            start=last_date + pd.Timedelta(days=1),
-            periods=n_periods,
-            freq="D",
-        )
-
-        preds = _recursive_forecast(
-            s_history, res["model"], res["feature_cols"], n_periods
-        )
-        forecasts[name] = pd.Series(preds, index=future_index, name=name)
-
-    return forecasts
-
-
-def summary(results: dict[str, dict]) -> pd.DataFrame:
-    """Val-set metrics for all groups."""
-    rows = []
-    for name, res in results.items():
-        row = {"group": name, "status": res["status"], "model": res.get("msg", "")}
-        if res["status"] == "ok":
-            row.update(res["val_metrics"])
-        rows.append(row)
-    return pd.DataFrame(rows)
-
-
-def walk_forward_cv(s: pd.Series, model: XGBRegressor = None, n_rep: int = 5) -> pd.DataFrame:
-    """
-    Walk-forward CV where the last fold is exactly the real train/val split.
-
-    Args:
-        s:     full series (train + val + test)
-        model: unfitted XGBRegressor used as template (cloned each fold)
-        n_rep: number of folds
-
-    Returns:
-        DataFrame: fold, train_from, train_to, val_from, val_to, MAPE
-    """
-    from sklearn.base import clone
-
-    if model is None:
-        model = _base_model()
-
-    # anchor on the exact same split fit_xgboost uses
-    train, val, _ = _split(s)
-    features      = _make_features(s)
-    feature_cols  = [c for c in features.columns if c != "sales"]
-
-    # find positions in features (after dropna) that correspond to real boundaries
-    train_end_pos = features.index.searchsorted(train.index[-1], side="right")
-    val_end_pos   = features.index.searchsorted(val.index[-1],   side="right")
-    val_size      = val_end_pos - train_end_pos   # constant across all folds
-
-    rows = []
-    for i in range(n_rep):
-        # last fold (i = n_rep-1) → exactly train → val
-        steps_back    = (n_rep - 1 - i)
-        fold_val_end  = val_end_pos  - steps_back * val_size
-        fold_val_start= fold_val_end - val_size
-
-        if fold_val_start <= 0:
-            continue
-
-        X_train = features.iloc[:fold_val_start][feature_cols]
-        y_train = features.iloc[:fold_val_start]["sales"]
-        X_val   = features.iloc[fold_val_start:fold_val_end][feature_cols]
-        y_val   = features.iloc[fold_val_start:fold_val_end]["sales"]
-
-        m = clone(model)
-        m.fit(X_train, y_train, verbose=False)
-
-        preds = np.clip(m.predict(X_val), 0, None)
-        mape  = mean_absolute_percentage_error(y_val, preds)
-
-        rows.append({
-            "fold":       i + 1,
-            "train_from": X_train.index[0].date(),
-            "train_to":   X_train.index[-1].date(),
-            "val_from":   X_val.index[0].date(),
-            "val_to":     X_val.index[-1].date(),
-            "MAPE":       round(mape, 4),
-        })
-
-    return pd.DataFrame(rows)
+    return {
+        "model": xgb,
+        "best_params": best_params,
+        "final_mae": final_mae,
+        "final_features": final_features,
+    }

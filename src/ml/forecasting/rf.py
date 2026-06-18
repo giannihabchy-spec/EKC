@@ -12,10 +12,7 @@ from ml.modeling import (
 from ml.loaders import load_daily_sales
 
 
-def fit_rf(branch_id):
-    data = load_daily_sales(branch_id)
-    series = get_series(data, 'category')
-    s = series.get('Beverages')
+def fit_rf(s: pd.Series) -> dict:
     train, val, test = _split(s)
 
     full_features = _make_features(s)
@@ -35,6 +32,7 @@ def fit_rf(branch_id):
         for min_samples_leaf in [1, 2, 5, 10]:
             for max_features in ["sqrt", "log2", 0.5, 0.8]:
                 for n_est in [100, 300, 600]:
+                # for n_est in [100]:
                 
                     rf = RandomForestRegressor(
                         n_estimators=n_est,
@@ -117,3 +115,27 @@ def fit_rf(branch_id):
         'final_mae': final_mae,
         'final_features': final_features,
     }
+
+
+def fit_all_rf(branch_id, threshold: float = 0.1) -> dict:
+    data = load_daily_sales(branch_id)
+    series = get_series(data,'category')
+
+    results = {}
+    for name, s in series.items():
+        near_zero_ratio = len(s[np.abs(s) < 10]) / len(s)
+        if near_zero_ratio > threshold:
+            results[name] = {
+                "status": "skipped",
+                "reason": f"{near_zero_ratio:.1%} of values are near-zero (threshold: {threshold:.1%})",
+            }
+            continue
+
+        try:
+            result = fit_rf(s)
+            result["status"] = "ok"
+            results[name] = result
+        except Exception as e:
+            results[name] = {"status": "error", "reason": str(e)}
+
+    return results

@@ -105,12 +105,17 @@ def fit_rf(s: pd.Series) -> dict:
 
     rf.fit(x_train_val,y_train_val)
     final_pred = rf.predict(x_test)
-    final_mae = round(mean_absolute_error(y_test, final_pred), 2)
+
+    final_mae  = round(mean_absolute_error(y_test, final_pred), 2)
+    final_rmse = round(np.sqrt(np.mean((y_test - final_pred) ** 2)), 2)
+    final_wape = round(np.sum(np.abs(y_test - final_pred)) / np.sum(np.abs(y_test)) * 100, 2)
 
     return {
         'model': rf,
         'best_params': best_params,
         'final_mae': final_mae,
+        'final_rmse': final_rmse,
+        'final_wape': final_wape,
         'final_features': final_features,
     }
 

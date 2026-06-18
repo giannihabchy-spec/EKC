@@ -22,7 +22,7 @@ def fit_rf(s: pd.Series) -> dict:
     x_val,   y_val   = val_feat[feature_cols],   val_feat["sales"]
     x_test,   y_test   = test_feat[feature_cols],   test_feat["sales"]
 
-    best_mae = float("inf")
+    best_wape = float("inf")
     best_params = None
 
     for max_depth in [5, 10, 20, 50]:
@@ -30,7 +30,7 @@ def fit_rf(s: pd.Series) -> dict:
             for max_features in ["sqrt", "log2", 0.5, 0.8]:
                 for n_est in [100, 300]:
                 # for n_est in [100]:
-                
+
                     rf = RandomForestRegressor(
                         n_estimators=n_est,
                         max_depth=max_depth,
@@ -44,10 +44,10 @@ def fit_rf(s: pd.Series) -> dict:
 
                     pred = rf.predict(x_val)
 
-                    mae = mean_absolute_error(y_val, pred)
+                    wape = np.sum(np.abs(y_val - pred)) / np.sum(np.abs(y_val))
 
-                    if mae < best_mae:
-                        best_mae = mae
+                    if wape < best_wape:
+                        best_wape = wape
                         best_params = {
                             'n_estimators': n_est,
                             "max_depth": max_depth,

@@ -31,7 +31,7 @@ def fit_rf(s: pd.Series) -> dict:
     for max_depth in [5, 10, 20, 50]:
         for min_samples_leaf in [1, 2, 5, 10]:
             for max_features in ["sqrt", "log2", 0.5, 0.8]:
-                for n_est in [100, 300, 600]:
+                for n_est in [100, 300]:
                 # for n_est in [100]:
                 
                     rf = RandomForestRegressor(
@@ -111,6 +111,7 @@ def fit_rf(s: pd.Series) -> dict:
     final_mae = round(mean_absolute_error(y_test, final_pred), 2)
 
     return {
+        'model': rf,
         'best_params': best_params,
         'final_mae': final_mae,
         'final_features': final_features,

@@ -148,5 +148,6 @@ def _make_features(s: pd.Series) -> pd.DataFrame:
         df[f"roll_mean_{window}"] = df["sales"].shift(1).rolling(window).mean()
         df[f"roll_std_{window}"]  = df["sales"].shift(1).rolling(window).std()
 
-    df = df.dropna()
+    cols = [c for c in df.columns if c != "sales"]
+    df = df.dropna(subset=cols)
     return df

@@ -110,12 +110,16 @@ def fit_rf(s: pd.Series) -> dict:
     final_rmse = round(np.sqrt(np.mean((y_test - final_pred) ** 2)), 2)
     final_wape = round(np.sum(np.abs(y_test - final_pred)) / np.sum(np.abs(y_test)) * 100, 2)
 
+    metrics = {
+        "final_mae": final_mae,
+        "final_rmse": final_rmse,
+        "final_wape": final_wape,
+    }
+
     return {
         'model': rf,
-        'best_params': best_params,
-        'final_mae': final_mae,
-        'final_rmse': final_rmse,
-        'final_wape': final_wape,
+        "best_params": best_params,
+        "metrics": metrics,
         'final_features': final_features,
     }
 

@@ -180,8 +180,12 @@ def get_omega_currency(branch_id):
 def get_monthly_rates():
 
     conn = get_pg_connection()
-    data = pd.read_sql("select * from monthly_rate;", conn)
-    conn.close()
+
+    try:
+        data = pd.read_sql("select * from monthly_rate;", conn)
+
+    finally:
+        conn.close()
 
     return data
 
@@ -189,19 +193,22 @@ def get_monthly_rates():
 def get_last_table(branch_id, table_name):
     conn = get_pg_connection()
 
-    query = f"""
-        SELECT *
-        FROM public.{table_name}
-        WHERE branch_id = %s
-          AND report_date = (
-              SELECT MAX(report_date)
-              FROM public.{table_name}
-              WHERE branch_id = %s
-          );
-    """
+    try:
+        query = f"""
+            SELECT *
+            FROM public.{table_name}
+            WHERE branch_id = %s
+            AND report_date = (
+                SELECT MAX(report_date)
+                FROM public.{table_name}
+                WHERE branch_id = %s
+            );
+        """
 
-    data = pd.read_sql(query, conn, params=(branch_id, branch_id))
-    conn.close()
+        data = pd.read_sql(query, conn, params=(branch_id, branch_id))
+
+    finally:   
+        conn.close()
 
     return data
 

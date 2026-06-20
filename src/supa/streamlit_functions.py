@@ -20,18 +20,21 @@ def get_period_options():
     ).strftime('%Y-%m').tolist()[::-1]
 
 def get_client_list_for_daily_sales():
+    conn = get_pg_connection()
     try:
-        with get_pg_connection() as conn:
-            outlets = pd.read_sql("""
-                SELECT DISTINCT b.outlet
-                FROM branches b
-                JOIN ac_daily_sales s
-                  ON s.branch_id = b.id
-                ORDER BY b.outlet;
-            """, conn)
+        outlets = pd.read_sql("""
+            SELECT DISTINCT b.outlet
+            FROM branches b
+            JOIN ac_daily_sales s
+                ON s.branch_id = b.id
+            ORDER BY b.outlet;
+        """, conn)
 
         return outlets["outlet"].tolist()
 
     except Exception as e:
         st.error(f"Error fetching clients: {e}")
         return []
+    
+    finally:
+        conn.close()

@@ -450,18 +450,20 @@ def validate_omega_name(sheets_dict, supa_list): # for quick Variance
 
 def validate_currency_rate(branch_id, file_cur, file_rate):
     conn = get_pg_connection()
-    cur = conn.cursor()
+    try:
+        cur = conn.cursor()
 
-    cur.execute("""
-        SELECT currency, client_rate
-        FROM branches
-        WHERE id = %s
-    """, (branch_id,))
+        cur.execute("""
+            SELECT currency, client_rate
+            FROM branches
+            WHERE id = %s
+        """, (branch_id,))
 
-    result = cur.fetchone()
+        result = cur.fetchone()
 
-    cur.close()
-    conn.close()
+        cur.close()
+    finally:
+        conn.close()
 
     client_cur = result[0]
     client_rate = result[1]

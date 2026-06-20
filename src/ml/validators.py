@@ -4,9 +4,6 @@ from supa.validators import safe_ident
 from etl.utils import make_columns_date
 from supa.db import get_pg_connection
 
-conn = get_pg_connection()
-
-
 def validate_omega_name(sheets_dict, branch_id, supabase):
     supa_list = get_branch_omega_name(branch_id)['omega_name']
 
@@ -192,8 +189,7 @@ def describe_series(series: dict[str, pd.Series]) -> pd.DataFrame:
 
 
 def delete_all_for_branch(branch_id, sheet, sheet_config): # for push_results
-# def delete_existing_data(conn, sheet, sheet_config, branch_id):
-    conn.rollback()
+
 
     sht, data = next(iter(sheet.items()))
 
@@ -209,9 +205,10 @@ def delete_all_for_branch(branch_id, sheet, sheet_config): # for push_results
     table_name = safe_ident(table)
 
     deleted_rows = []
+    conn = None
 
     try:
-
+        conn = get_pg_connection()
         with conn.cursor() as cur:
             cur.execute(
                 f"""
@@ -229,11 +226,16 @@ def delete_all_for_branch(branch_id, sheet, sheet_config): # for push_results
         conn.commit()
 
     except Exception as e:
-        conn.rollback()
+        if conn:
+            conn.rollback()
+
         return {
             "status": "error",
             "msg": f"Delete failed: {e}"
         }
+    finally:
+        if conn:
+            conn.close()
 
     if deleted_rows:
         return {

@@ -98,7 +98,7 @@ def convert_sheet_names_in_dict(sheet):
     }
 
 
-def get_series(df: pd.DataFrame, group_by: str = "item_group") -> dict[str, pd.Series]:
+def get_series(df: pd.DataFrame, group_by: str = "category") -> dict[str, pd.Series]:
     """
     Split the flat DataFrame into one time series per group.
 

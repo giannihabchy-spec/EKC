@@ -25,19 +25,17 @@ def fit_rf(s: pd.Series) -> dict:
     best_wape = float("inf")
     best_params = None
 
-    # for max_depth in [5, 10, 20, 50]:
-    for max_depth in [5]:
+    for max_depth in [5, 10, 20, 50]:
+    # for max_depth in [5]:
 
-        # for min_samples_leaf in [1, 2, 5, 10]:
-        for min_samples_leaf in [1]:
+        for min_samples_leaf in [1, 2, 5, 10]:
+        # for min_samples_leaf in [1]:
 
-            # for max_features in ["sqrt", "log2", 0.5, 0.8]:
-            for max_features in ["sqrt"]:
+            for max_features in ["sqrt", "log2", 0.5, 0.8]:
+            # for max_features in ["sqrt"]:
 
-                # for n_est in [100, 300]:
-                for n_est in [10]:
-
-                # for n_est in [100]:
+                for n_est in [100, 300]:
+                # for n_est in [10]:
 
                     rf = RandomForestRegressor(
                         n_estimators=n_est,

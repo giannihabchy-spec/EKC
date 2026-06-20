@@ -26,20 +26,20 @@ def fit_xgb(s: pd.Series) -> dict:
     best_wape = float("inf")
     best_params = None
 
-    # for n_est in [100, 300, 500]:
-    for n_est in [10]:
+    for n_est in [100, 300, 500]:
+    # for n_est in [10]:
 
-        # for learning_rate in [0.01, 0.05, 0.1]:
-        for learning_rate in [0.1]:
+        for learning_rate in [0.01, 0.05, 0.1]:
+        # for learning_rate in [0.1]:
 
-            # for max_depth in [3, 5, 7]:
-            for max_depth in [7]:
+            for max_depth in [3, 5, 7]:
+            # for max_depth in [7]:
 
-                # for subsample in [0.8, 1.0]:
-                for subsample in [1.0]:
+                for subsample in [0.8, 1.0]:
+                # for subsample in [1.0]:
 
-                    # for colsample_bytree in [0.8, 1.0]:
-                    for colsample_bytree in [1.0]:
+                    for colsample_bytree in [0.8, 1.0]:
+                    # for colsample_bytree in [1.0]:
 
                         xgb = XGBRegressor(
                             n_estimators=n_est,

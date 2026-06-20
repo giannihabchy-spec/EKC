@@ -33,6 +33,7 @@ def fit_all(branch_id: int, threshold: float = 0.1) -> pd.DataFrame:
             try:
                 result = fit_fn(s)
                 rows.append({
+                    "branch_id":      branch_id,
                     "category":       category,
                     "model":          model_name,
                     "from":           result["from"],
@@ -43,7 +44,7 @@ def fit_all(branch_id: int, threshold: float = 0.1) -> pd.DataFrame:
                     "best_params":    result["best_params"],
                     "final_features": result["final_features"],
                     "model_obj":      result["model"],
-                    "supa_result":    result_to_json(model_name, result),
+                    "result":    result_to_json(model_name, result),
                 })
             except Exception as e:
                 rows.append({

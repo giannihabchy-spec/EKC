@@ -9,14 +9,16 @@ def load_daily_sales(branch_id: int) -> pd.DataFrame:
     Sorted by category / item_group / date, no nulls in key columns.
     """
     conn = get_pg_connection()
-    query = """
-        SELECT date, category, item_group, sales, currency, client_rate
-        FROM public.ac_daily_sales
-        WHERE branch_id = %s
-        ORDER BY category, item_group, date
-    """
-    data = pd.read_sql(query, conn, params=(branch_id,))
-    conn.close()
+    try:
+        query = """
+            SELECT date, category, item_group, sales, currency, client_rate, report_date
+            FROM public.ac_daily_sales
+            WHERE branch_id = %s
+            ORDER BY category, item_group, date
+        """
+        data = pd.read_sql(query, conn, params=(branch_id,))
+    finally:
+        conn.close()
 
     data["date"] = pd.to_datetime(data["date"])
     data["sales"] = pd.to_numeric(data["sales"], errors="coerce")

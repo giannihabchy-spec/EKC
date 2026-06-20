@@ -25,10 +25,18 @@ def fit_rf(s: pd.Series) -> dict:
     best_wape = float("inf")
     best_params = None
 
-    for max_depth in [5, 10, 20, 50]:
-        for min_samples_leaf in [1, 2, 5, 10]:
-            for max_features in ["sqrt", "log2", 0.5, 0.8]:
-                for n_est in [100, 300]:
+    # for max_depth in [5, 10, 20, 50]:
+    for max_depth in [5]:
+
+        # for min_samples_leaf in [1, 2, 5, 10]:
+        for min_samples_leaf in [1]:
+
+            # for max_features in ["sqrt", "log2", 0.5, 0.8]:
+            for max_features in ["sqrt"]:
+
+                # for n_est in [100, 300]:
+                for n_est in [10]:
+
                 # for n_est in [100]:
 
                     rf = RandomForestRegressor(
@@ -116,33 +124,14 @@ def fit_rf(s: pd.Series) -> dict:
         "final_wape": final_wape,
     }
 
+    from_date = full_features.index.min().strftime("%Y-%m-%d")
+    to_date = full_features.index.max().strftime("%Y-%m-%d")
+
     return {
         'model': rf,
         "best_params": best_params,
         "metrics": metrics,
         'final_features': final_features,
+        'from': from_date,
+        'to': to_date,
     }
-
-
-# def fit_all_rf(branch_id, threshold: float = 0.1) -> dict:
-#     data = load_daily_sales(branch_id)
-#     series = get_series(data,'category')
-
-#     results = {}
-#     for name, s in series.items():
-#         near_zero_ratio = len(s[np.abs(s) < 10]) / len(s)
-#         if near_zero_ratio > threshold:
-#             results[name] = {
-#                 "status": "skipped",
-#                 "reason": f"{near_zero_ratio:.1%} of values are near-zero (threshold: {threshold:.1%})",
-#             }
-#             continue
-
-#         try:
-#             result = fit_rf(s)
-#             result["status"] = "ok"
-#             results[name] = result
-#         except Exception as e:
-#             results[name] = {"status": "error", "reason": str(e)}
-
-#     return results

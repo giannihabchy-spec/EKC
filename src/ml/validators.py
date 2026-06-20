@@ -2,6 +2,9 @@ import pandas as pd
 from supa.db import get_branch_omega_name
 from supa.validators import safe_ident
 from etl.utils import make_columns_date
+from supa.db import get_pg_connection
+
+conn = get_pg_connection()
 
 
 def validate_omega_name(sheets_dict, branch_id, supabase):
@@ -186,3 +189,59 @@ def describe_series(series: dict[str, pd.Series]) -> pd.DataFrame:
             "max": round(s.max(), 2),
         })
     return pd.DataFrame(rows)
+
+
+def delete_all_for_branch(branch_id, sheet, sheet_config): # for push_results
+# def delete_existing_data(conn, sheet, sheet_config, branch_id):
+    conn.rollback()
+
+    sht, data = next(iter(sheet.items()))
+
+
+    config = sheet_config.get(sht)
+    if config is None:
+        raise KeyError(
+            f"No config found for sheet '{sht}'. "
+            f"Available configs: {list(sheet_config.keys())}"
+        )
+
+    table = config["target_table"]
+    table_name = safe_ident(table)
+
+    deleted_rows = []
+
+    try:
+
+        with conn.cursor() as cur:
+            cur.execute(
+                f"""
+                DELETE FROM {table_name}
+                WHERE branch_id = %s
+                """,
+                (branch_id,)
+            )
+
+            if cur.rowcount > 0:
+                deleted_rows.append(
+                    f"{cur.rowcount} row(s) deleted"
+                )
+
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+        return {
+            "status": "error",
+            "msg": f"Delete failed: {e}"
+        }
+
+    if deleted_rows:
+        return {
+            "status": "ok",
+            "msg": "Deleted existing data from:  \n" + "  \n".join(deleted_rows)
+        }
+
+    return {
+        "status": "ok",
+        "msg": "No existing data found"
+    }

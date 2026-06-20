@@ -4,11 +4,9 @@ from xgboost import XGBRegressor
 from sklearn.metrics import mean_absolute_error
 from sklearn.inspection import permutation_importance
 from ml.modeling import (
-    get_series,
     _split,
-    _make_features
+    _make_features,
 )
-from ml.loaders import load_daily_sales
 
 
 def fit_xgb(s: pd.Series) -> dict:
@@ -28,11 +26,20 @@ def fit_xgb(s: pd.Series) -> dict:
     best_wape = float("inf")
     best_params = None
 
-    for n_est in [100, 300, 500]:
-        for learning_rate in [0.01, 0.05, 0.1]:
-            for max_depth in [3, 5, 7]:
-                for subsample in [0.8, 1.0]:
-                    for colsample_bytree in [0.8, 1.0]:
+    # for n_est in [100, 300, 500]:
+    for n_est in [10]:
+
+        # for learning_rate in [0.01, 0.05, 0.1]:
+        for learning_rate in [0.1]:
+
+            # for max_depth in [3, 5, 7]:
+            for max_depth in [7]:
+
+                # for subsample in [0.8, 1.0]:
+                for subsample in [1.0]:
+
+                    # for colsample_bytree in [0.8, 1.0]:
+                    for colsample_bytree in [1.0]:
 
                         xgb = XGBRegressor(
                             n_estimators=n_est,
@@ -124,9 +131,14 @@ def fit_xgb(s: pd.Series) -> dict:
         "final_wape": final_wape,
     }
 
+    from_date = full_features.index.min().strftime("%Y-%m-%d")
+    to_date = full_features.index.max().strftime("%Y-%m-%d")
+
     return {
         "model": xgb,
         "best_params": best_params,
         "metrics": metrics,
         "final_features": final_features,
+        'from': from_date,
+        'to': to_date,
     }

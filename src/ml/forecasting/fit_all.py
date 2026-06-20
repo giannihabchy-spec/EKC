@@ -1,27 +1,65 @@
+import json
 import numpy as np
-from ml.modeling import get_series
+import pandas as pd
+from ml.forecasting.registry import MODEL_REGISTRY
 from ml.loaders import load_daily_sales
+from ml.modeling import (
+    get_series,
+    result_to_json
+)
 
 
-def fit_all(branch_id, fit_func, threshold: float = 0.1) -> dict:
-    data = load_daily_sales(branch_id)
-    series = get_series(data,'category')
 
-    results = {}
-    for name, s in series.items():
+
+def fit_all(branch_id: int, threshold: float = 0.1) -> pd.DataFrame:
+    """
+    Run every model in MODEL_REGISTRY on every category that passes the
+    near-zero filter. Returns one row per (category, model) combination
+    so you can compare all models side by side, with a `is_best` flag
+    marking the winner per category by WAPE.
+    """
+    data   = load_daily_sales(branch_id)
+    report_date = data['report_date'].max()
+
+    series = get_series(data, "category")
+
+    rows = []
+    for category, s in series.items():
         near_zero_ratio = len(s[np.abs(s) < 10]) / len(s)
         if near_zero_ratio > threshold:
-            results[name] = {
-                "status": "skipped",
-                "reason": f"{near_zero_ratio:.1%} of values are near-zero (threshold: {threshold:.1%})",
-            }
             continue
 
-        try:
-            result = fit_func(s)
-            result["status"] = "ok"
-            results[name] = result
-        except Exception as e:
-            results[name] = {"status": "error", "reason": str(e)}
+        for model_name, fit_fn in MODEL_REGISTRY.items():
+            try:
+                result = fit_fn(s)
+                rows.append({
+                    "category":       category,
+                    "model":          model_name,
+                    "from":           result["from"],
+                    "to":             result["to"],
+                    "final_mae":      result["metrics"]["final_mae"],
+                    "final_rmse":     result["metrics"]["final_rmse"],
+                    "final_wape":     result["metrics"]["final_wape"],
+                    "best_params":    result["best_params"],
+                    "final_features": result["final_features"],
+                    "model_obj":      result["model"],
+                    "supa_result":    result_to_json(model_name, result),
+                })
+            except Exception as e:
+                rows.append({
+                    "category": category,
+                    "model":    model_name,
+                    "error":    str(e),
+                })
 
-    return results
+    df = pd.DataFrame(rows)
+
+    if df.empty or "final_wape" not in df.columns:
+        return df
+
+    best_idx    = df.groupby("category")["final_wape"].idxmin()
+    df["is_best"] = False
+    df.loc[best_idx, "is_best"] = True
+    df['report_date'] = report_date
+
+    return df

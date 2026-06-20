@@ -1,4 +1,5 @@
 import pandas as pd
+import json
 from supa.db import get_monthly_rates
 from etl.utils import make_columns_date
 from supa.db import get_omega_currency
@@ -151,3 +152,12 @@ def _make_features(s: pd.Series) -> pd.DataFrame:
     cols = [c for c in df.columns if c != "sales"]
     df = df.dropna(subset=cols)
     return df
+
+
+def result_to_json(model_name: str, result: dict) -> str:
+    return json.dumps({
+        "model":          model_name,
+        "best_params":    result["best_params"],
+        "metrics":        result["metrics"],
+        "final_features": result["final_features"],
+    })

@@ -24,30 +24,16 @@ def _rebuild_model(model_name: str, best_params: dict):
     raise ValueError(f"Unknown model: {model_name}")
 
 
-def _horizon_end(max_date: pd.Timestamp) -> pd.Timestamp:
-    """Last day of the month that is 2 months ahead of max_date."""
-    month = max_date.month + 2
+def _horizon_end(max_date: pd.Timestamp, months: int) -> pd.Timestamp:
+    month = max_date.month + months
     year = max_date.year + (month - 1) // 12
     month = (month - 1) % 12 + 1
     last_day = calendar.monthrange(year, month)[1]
     return pd.Timestamp(year=year, month=month, day=last_day)
 
 
-def forecast_daily_sales(branch_id: int) -> dict:
-    """
-    For each category, re-fits the best model and returns a dict:
+def forecast_daily_sales(branch_id: int, months: int = 2) -> dict:
 
-        {
-            category: {
-                "model":       str,
-                "train_val":   pd.Series,   # actuals, train+val period
-                "test_actual": pd.Series,   # actuals, test period
-                "test_pred":   pd.Series,   # model predictions on test period
-                "forecast":    pd.Series,   # recursive forecast, max_date+1 to end of month+2
-                "metrics":     dict,        # final_mae, final_rmse, final_wape
-            }
-        }
-    """
     data = load_daily_sales(branch_id)
     results_df = get_last_table(branch_id, "forecast_daily_sales_results")
 
@@ -92,7 +78,7 @@ def forecast_daily_sales(branch_id: int) -> dict:
         max_date = s.index.max()
         future_dates = pd.date_range(
             start=max_date + pd.Timedelta(days=1),
-            end=_horizon_end(max_date),
+            end=_horizon_end(max_date, months),
             freq="D",
         )
 

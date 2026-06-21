@@ -38,6 +38,7 @@ def fit_all(branch_id: int, threshold: float = 0.1) -> pd.DataFrame:
                     "model":          model_name,
                     "from":           result["from"],
                     "to":             result["to"],
+                    "val_wape":      result["metrics"]["val_wape"],
                     "final_mae":      result["metrics"]["final_mae"],
                     "final_rmse":     result["metrics"]["final_rmse"],
                     "final_wape":     result["metrics"]["final_wape"],

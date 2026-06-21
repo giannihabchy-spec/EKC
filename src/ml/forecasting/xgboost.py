@@ -7,6 +7,15 @@ from ml.modeling import (
     _split,
     _make_features,
 )
+from ml.config import xgb_tuning
+
+
+n_ests = xgb_tuning['n_est']
+learning_rates = xgb_tuning['learning_rate']
+max_depths = xgb_tuning['max_depth']
+subsamples = xgb_tuning['subsample']
+colsample_bytrees = xgb_tuning['colsample_bytree']
+
 
 
 def fit_xgb(s: pd.Series) -> dict:
@@ -26,20 +35,15 @@ def fit_xgb(s: pd.Series) -> dict:
     best_wape = float("inf")
     best_params = None
 
-    for n_est in [100, 300, 500]:
-    # for n_est in [10]:
+    for n_est in n_ests:
 
-        for learning_rate in [0.01, 0.05, 0.1]:
-        # for learning_rate in [0.1]:
+        for learning_rate in learning_rates:
 
-            for max_depth in [3, 5, 7]:
-            # for max_depth in [7]:
+            for max_depth in max_depths:
 
-                for subsample in [0.8, 1.0]:
-                # for subsample in [1.0]:
+                for subsample in subsamples:
 
-                    for colsample_bytree in [0.8, 1.0]:
-                    # for colsample_bytree in [1.0]:
+                    for colsample_bytree in colsample_bytrees:
 
                         xgb = XGBRegressor(
                             n_estimators=n_est,
@@ -106,13 +110,18 @@ def fit_xgb(s: pd.Series) -> dict:
     xgb.fit(new_x_train, y_train)
     new_pred = xgb.predict(new_x_val)
 
-    mae = round(mean_absolute_error(y_val, pred), 2)
-    new_mae = round(mean_absolute_error(y_val, new_pred), 2)
+    # mae = round(mean_absolute_error(y_val, pred), 2)
+    # new_mae = round(mean_absolute_error(y_val, new_pred), 2)
 
-    if new_mae <= mae:
+    wape = np.sum(np.abs(y_val - pred)) / np.sum(np.abs(y_val))
+    new_wape = np.sum(np.abs(y_val - new_pred)) / np.sum(np.abs(y_val))
+
+    if new_wape <= wape:
         final_features = selected_features
+        val_wape = round(new_wape * 100, 2)
     else:
         final_features = feature_cols
+        val_wape = round(wape * 100, 2)
 
     x_train_val = pd.concat([x_train, x_val])[final_features]
     y_train_val = pd.concat([y_train, y_val])
@@ -126,6 +135,7 @@ def fit_xgb(s: pd.Series) -> dict:
     final_wape = round(np.sum(np.abs(y_test - final_pred)) / np.sum(np.abs(y_test)) * 100, 2)
 
     metrics = {
+        "val_wape": val_wape,
         "final_mae": final_mae,
         "final_rmse": final_rmse,
         "final_wape": final_wape,

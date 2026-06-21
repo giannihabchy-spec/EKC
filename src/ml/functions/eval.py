@@ -35,7 +35,7 @@ def compute_metrics(actual, forecast):
 
 
 def display_results(data):
-    data = data.loc[data['is_best'] == True, ['category', 'from', 'to', 'model', 'final_wape']].copy()
+    data = data.loc[data['is_best'] == True, ['category', 'from', 'to', 'model', 'final_wape', 'val_wape']].copy()
     for idx, row in data.iterrows():
     #     st.markdown(f"Category: {row['category']}     From: {row['from']}     to: {row['to']}     best model: {row['model']}     final wape: {row['final_wape']}")
 
@@ -44,4 +44,5 @@ def display_results(data):
             st.write(f"From: {row['from']}")
             st.write(f"To: {row['to']}")
             st.write(f"Best model: {row['model']}")
+            st.write(f"Val WAPE: {row['val_wape']}")
             st.write(f"Final WAPE: {row['final_wape']}")

@@ -1,13 +1,20 @@
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_absolute_error, r2_score, mean_absolute_percentage_error
+from sklearn.metrics import mean_absolute_error
 from sklearn.inspection import permutation_importance
-
 from ml.modeling import (
     _split,
     _make_features
 )
+from ml.config import rf_tuning
+
+max_depths = rf_tuning['max_depth']
+min_samples_leafs = rf_tuning['min_samples_leaf']
+max_featuress = rf_tuning['max_features']
+n_ests = rf_tuning['n_est']
+
+
 
 def fit_rf(s: pd.Series) -> dict:
     train, val, test = _split(s)
@@ -25,17 +32,13 @@ def fit_rf(s: pd.Series) -> dict:
     best_wape = float("inf")
     best_params = None
 
-    for max_depth in [5, 10, 20, 50]:
-    # for max_depth in [5]:
+    for max_depth in max_depths:
 
-        for min_samples_leaf in [1, 2, 5, 10]:
-        # for min_samples_leaf in [1]:
+        for min_samples_leaf in min_samples_leafs:
 
-            for max_features in ["sqrt", "log2", 0.5, 0.8]:
-            # for max_features in ["sqrt"]:
+            for max_features in max_featuress:
 
-                for n_est in [100, 300]:
-                # for n_est in [10]:
+                for n_est in n_ests:
 
                     rf = RandomForestRegressor(
                         n_estimators=n_est,
@@ -91,19 +94,26 @@ def fit_rf(s: pd.Series) -> dict:
         index=x_val.columns
     ).sort_values(ascending=False)
     selected_features = imp[imp>0].index.to_list()
+    if not selected_features:
+        selected_features = feature_cols
 
     new_x_train = x_train[selected_features]
     new_x_val = x_val[selected_features]
     rf.fit(new_x_train,y_train)
     new_pred = rf.predict(new_x_val)
 
-    mae = round(mean_absolute_error(y_val, pred), 2)
-    new_mae = round(mean_absolute_error(y_val, new_pred), 2)
+    # mae = round(mean_absolute_error(y_val, pred), 2)
+    # new_mae = round(mean_absolute_error(y_val, new_pred), 2)
 
-    if new_mae <= mae:
+    wape = np.sum(np.abs(y_val - pred)) / np.sum(np.abs(y_val))
+    new_wape = np.sum(np.abs(y_val - new_pred)) / np.sum(np.abs(y_val))
+
+    if new_wape <= wape:
         final_features = selected_features
+        val_wape = round(new_wape * 100, 2)
     else:
         final_features = feature_cols
+        val_wape = round(wape * 100, 2)
 
     x_train_val = pd.concat([x_train,x_val])[final_features]
     y_train_val = pd.concat([y_train,y_val])
@@ -117,6 +127,7 @@ def fit_rf(s: pd.Series) -> dict:
     final_wape = round(np.sum(np.abs(y_test - final_pred)) / np.sum(np.abs(y_test)) * 100, 2)
 
     metrics = {
+        "val_wape": val_wape,
         "final_mae": final_mae,
         "final_rmse": final_rmse,
         "final_wape": final_wape,

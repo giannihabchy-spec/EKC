@@ -43,38 +43,36 @@ sheet_config = {
 SEASONAL_PERIOD = 7
 TRAIN_RATIO = 0.70
 VAL_RATIO   = 0.15
-
-# LAGS     = [1, 2, 3, 7, 14, 21, 28]
 LAGS     = [1,2,3,7,14,21,28,35,42,49,56]
 ROLLS    = [7, 14, 28, 56]
 
 
-# rf_tuning = {
-#     'max_depth': [5, 10, 20, 50],
-#     'min_samples_leaf': [1, 2, 5, 10],
-#     'max_features': ["sqrt", "log2", 0.5, 0.8],
-#     'n_est': [100, 300],
-# }
-
-# xgb_tuning = {
-#     'n_est': [100, 300, 500],
-#     'learning_rate': [0.01, 0.05, 0.1],
-#     'max_depth': [3, 5, 7],
-#     'subsample': [0.8, 1.0],
-#     'colsample_bytree': [0.8, 1.0],
-# }
-
 rf_tuning = {
-    'max_depth': [5],
-    'min_samples_leaf': [1],
-    'max_features': ["sqrt"],
-    'n_est': [10],
+    'max_depth': [5, 10, 20, 50],
+    'min_samples_leaf': [1, 2, 5, 10],
+    'max_features': ["sqrt", "log2", 0.5, 0.8],
+    'n_est': [100, 300],
 }
 
 xgb_tuning = {
-    'n_est': [10],
-    'learning_rate': [0.1],
-    'max_depth': [3],
-    'subsample': [0.8],
-    'colsample_bytree': [0.8],
+    'n_est': [100, 300, 500],
+    'learning_rate': [0.01, 0.05, 0.1],
+    'max_depth': [3, 5, 7],
+    'subsample': [0.8, 1.0],
+    'colsample_bytree': [0.8, 1.0],
 }
+
+# rf_tuning = {
+#     'max_depth': [5],
+#     'min_samples_leaf': [1],
+#     'max_features': ["sqrt"],
+#     'n_est': [10],
+# }
+
+# xgb_tuning = {
+#     'n_est': [10],
+#     'learning_rate': [0.1],
+#     'max_depth': [3],
+#     'subsample': [0.8],
+#     'colsample_bytree': [0.8],
+# }

@@ -4,9 +4,11 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
+from pmdarima import auto_arima
 
 from ml.loaders import load_daily_sales
 from ml.modeling import get_series, _split, _make_features
+from ml.config import SEASONAL_PERIOD
 from supa.db import get_last_table
 
 
@@ -21,6 +23,8 @@ def _rebuild_model(model_name: str, best_params: dict):
             n_jobs=-1,
             tree_method="hist",
         )
+    if model_name == "sarima":
+        return None
     raise ValueError(f"Unknown model: {model_name}")
 
 
@@ -53,28 +57,16 @@ def forecast_daily_sales(branch_id: int, months: int = 2) -> dict:
         model_name = row["model"]
         result_json = row["result"]
         best_params = result_json["best_params"]
-        final_features = result_json["final_features"]
+        final_features = result_json.get("final_features")
 
         if category not in series:
             continue
 
         s = series[category]
         train, val, test = _split(s)
-        full_features = _make_features(s)
-
         train_val_idx = train.index.union(val.index)
         test_idx = test.index
 
-        x_train_val = full_features.loc[full_features.index.isin(train_val_idx), final_features]
-        y_train_val = full_features.loc[full_features.index.isin(train_val_idx), "sales"]
-        x_test = full_features.loc[full_features.index.isin(test_idx), final_features]
-        y_test = full_features.loc[full_features.index.isin(test_idx), "sales"]
-
-        model = _rebuild_model(model_name, best_params)
-        model.fit(x_train_val, y_train_val)
-        test_pred = model.predict(x_test)
-
-        # Recursive forecast
         max_date = s.index.max()
         future_dates = pd.date_range(
             start=max_date + pd.Timedelta(days=1),
@@ -82,23 +74,49 @@ def forecast_daily_sales(branch_id: int, months: int = 2) -> dict:
             freq="D",
         )
 
-        history = s.copy()
-        forecast_values = []
+        if model_name == "sarima":
+            sarima_model = auto_arima(
+                s.loc[train_val_idx],
+                m=SEASONAL_PERIOD,
+                seasonal=True,
+                stepwise=True,
+                suppress_warnings=True,
+                error_action="ignore",
+                order=tuple(best_params["order"]),
+                seasonal_order=tuple(best_params["seasonal_order"]),
+            )
+            test_pred = sarima_model.predict(n_periods=len(test))
+            sarima_model.update(test)
+            forecast_values = np.clip(sarima_model.predict(n_periods=len(future_dates)), 0, None).round()
+        else:
+            full_features = _make_features(s)
 
-        for d in future_dates:
-            feat_df = _make_features(history)
-            last_row = feat_df.iloc[[-1]][final_features]
-            pred = float(model.predict(last_row)[0])
-            pred = max(0.0, round(pred))
-            history[d] = pred
-            forecast_values.append(pred)
+            x_train_val = full_features.loc[full_features.index.isin(train_val_idx), final_features]
+            y_train_val = full_features.loc[full_features.index.isin(train_val_idx), "sales"]
+            x_test = full_features.loc[full_features.index.isin(test_idx), final_features]
+            y_test = full_features.loc[full_features.index.isin(test_idx), "sales"]
+
+            model = _rebuild_model(model_name, best_params)
+            model.fit(x_train_val, y_train_val)
+            test_pred = model.predict(x_test)
+
+            history = s.copy()
+            forecast_values = []
+            for d in future_dates:
+                feat_df = _make_features(history)
+                last_row = feat_df.iloc[[-1]][final_features]
+                pred = max(0.0, round(float(model.predict(last_row)[0])))
+                history[d] = pred
+                forecast_values.append(pred)
+
+        y_test = s.loc[test_idx]
 
         output[category] = {
             "model": model_name,
             "train_val": s.loc[train_val_idx],
             "test_actual": y_test,
-            "test_pred": pd.Series(test_pred, index=test_idx, name="test_pred"),
-            "forecast": pd.Series(forecast_values, index=future_dates, name="forecast"),
+            "test_pred": pd.Series(np.array(test_pred), index=test_idx, name="test_pred"),
+            "forecast": pd.Series(np.array(forecast_values), index=future_dates, name="forecast"),
             "metrics": result_json["metrics"],
         }
 

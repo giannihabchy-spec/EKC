@@ -155,9 +155,11 @@ def _make_features(s: pd.Series) -> pd.DataFrame:
 
 
 def result_to_json(model_name: str, result: dict) -> str:
-    return json.dumps({
+    data = {
         "model":          model_name,
         "best_params":    result["best_params"],
         "metrics":        result["metrics"],
-        "final_features": result["final_features"],
-    })
+    }
+    if result.get("final_features") is not None:
+        data["final_features"] = result["final_features"]
+    return json.dumps(data)

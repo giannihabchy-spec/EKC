@@ -20,14 +20,14 @@ def fit_rf(s: pd.Series, freq: str = "D") -> dict:
     train, val, test = _split(s)
 
     full_features = _make_features(s, freq)
-    train_feat = full_features.loc[full_features.index.isin(train.index)]
-    val_feat   = full_features.loc[full_features.index.isin(val.index)]
-    test_feat = full_features.loc[full_features.index.isin(test.index)]
+    train_data = full_features.loc[full_features.index.isin(train.index)]
+    val_data   = full_features.loc[full_features.index.isin(val.index)]
+    test_data = full_features.loc[full_features.index.isin(test.index)]
 
     feature_cols = [c for c in full_features.columns if c != "sales"]
-    x_train, y_train = train_feat[feature_cols], train_feat["sales"]
-    x_val,   y_val   = val_feat[feature_cols],   val_feat["sales"]
-    x_test,   y_test   = test_feat[feature_cols],   test_feat["sales"]
+    x_train, y_train = train_data[feature_cols], train_data["sales"]
+    x_val,   y_val   = val_data[feature_cols],   val_data["sales"]
+    x_test,   y_test   = test_data[feature_cols],   test_data["sales"]
 
     best_wape = float("inf")
     best_params = None

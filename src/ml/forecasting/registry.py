@@ -5,5 +5,5 @@ from ml.forecasting.sarima import fit_sarima
 MODEL_REGISTRY = {
     "rf":  fit_rf,
     "xgb": fit_xgb,
-    "sarima": fit_sarima,
+    # "sarima": fit_sarima,
 }

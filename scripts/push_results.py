@@ -20,7 +20,7 @@ st.markdown("---")
 
 
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 with col1:
     client_options = get_client_list_for_daily_sales()
     selected_client = st.selectbox("Select Branch", options=client_options, key="ptdb_client")
@@ -33,6 +33,8 @@ with col2:
         format="%.2f",
         key="threshold"
     )
+with col3:
+    freq = st.selectbox("⚙️ Frequency", options=["Daily", "Weekly"], index=0)
 
 if st.button("▶ Run", type="primary", use_container_width=True):
 
@@ -40,7 +42,8 @@ if st.button("▶ Run", type="primary", use_container_width=True):
         qr_res = get_branch_id(selected_client)
         branch_id = qr_res["branch_id"]
 
-        results = fit_all(branch_id, threshold)
+        freq = "D" if freq == "Daily" else "W"
+        results = fit_all(branch_id, threshold, freq)
         data = {'results': results}
 
         display_results(results)
@@ -49,7 +52,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
 
     with st.status("Checking existing data...", expanded=True) as delete_st:
-        delete_result = delete_all_for_branch(branch_id, data, sheet_config)
+        delete_result = delete_all_for_branch(branch_id, data, sheet_config, freq)
         if delete_result['status'] != 'ok':
             st.write(delete_result['msg'])
             delete_st.update(label="Checking existing data", state="error", expanded=True)

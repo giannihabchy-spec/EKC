@@ -11,7 +11,7 @@ from ml.modeling import (
 
 
 
-def fit_all(branch_id: int, threshold: float = 0.1) -> pd.DataFrame:
+def fit_all(branch_id: int, threshold: float = 0.1, freq: str = "D") -> pd.DataFrame:
     """
     Run every model in MODEL_REGISTRY on every category that passes the
     near-zero filter. Returns one row per (category, model) combination
@@ -21,7 +21,7 @@ def fit_all(branch_id: int, threshold: float = 0.1) -> pd.DataFrame:
     data   = load_daily_sales(branch_id)
     report_date = data['report_date'].max()
 
-    series = get_series(data, "category")
+    series = get_series(data, "category", freq)
 
     rows = []
     for category, s in series.items():
@@ -31,10 +31,11 @@ def fit_all(branch_id: int, threshold: float = 0.1) -> pd.DataFrame:
 
         for model_name, fit_fn in MODEL_REGISTRY.items():
             try:
-                result = fit_fn(s)
+                result = fit_fn(s, freq)
                 rows.append({
                     "branch_id":      branch_id,
                     "category":       category,
+                    "freq":           freq,
                     "model":          model_name,
                     "from":           result["from"],
                     "to":             result["to"],

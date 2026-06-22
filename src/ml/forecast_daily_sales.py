@@ -36,7 +36,7 @@ def _horizon_end(max_date: pd.Timestamp, months: int) -> pd.Timestamp:
     return pd.Timestamp(year=year, month=month, day=last_day)
 
 
-def forecast_daily_sales(branch_id: int, months: int = 2) -> dict:
+def forecast_daily_sales(branch_id: int, months: int = 2, freq: str = "D") -> dict:
 
     data = load_daily_sales(branch_id)
     results_df = get_last_table(branch_id, "forecast_daily_sales_results")
@@ -49,8 +49,10 @@ def forecast_daily_sales(branch_id: int, months: int = 2) -> dict:
         lambda x: json.loads(x) if isinstance(x, str) else x
     )
 
-    series = get_series(data, "category")
+    series = get_series(data, "category", freq)
     output = {}
+
+    step = pd.Timedelta(days=1) if freq == "D" else pd.Timedelta(weeks=1)
 
     for _, row in best.iterrows():
         category = row["category"]
@@ -69,15 +71,15 @@ def forecast_daily_sales(branch_id: int, months: int = 2) -> dict:
 
         max_date = s.index.max()
         future_dates = pd.date_range(
-            start=max_date + pd.Timedelta(days=1),
+            start=max_date + step,
             end=_horizon_end(max_date, months),
-            freq="D",
+            freq=freq,
         )
 
         if model_name == "sarima":
             sarima_model = auto_arima(
                 s.loc[train_val_idx],
-                m=SEASONAL_PERIOD,
+                m=SEASONAL_PERIOD[freq],
                 seasonal=True,
                 stepwise=True,
                 suppress_warnings=True,
@@ -89,7 +91,7 @@ def forecast_daily_sales(branch_id: int, months: int = 2) -> dict:
             sarima_model.update(test)
             forecast_values = np.clip(sarima_model.predict(n_periods=len(future_dates)), 0, None).round()
         else:
-            full_features = _make_features(s)
+            full_features = _make_features(s, freq)
 
             x_train_val = full_features.loc[full_features.index.isin(train_val_idx), final_features]
             y_train_val = full_features.loc[full_features.index.isin(train_val_idx), "sales"]
@@ -103,7 +105,7 @@ def forecast_daily_sales(branch_id: int, months: int = 2) -> dict:
             history = s.copy()
             forecast_values = []
             for d in future_dates:
-                feat_df = _make_features(history)
+                feat_df = _make_features(history, freq)
                 last_row = feat_df.iloc[[-1]][final_features]
                 pred = max(0.0, round(float(model.predict(last_row)[0])))
                 history[d] = pred

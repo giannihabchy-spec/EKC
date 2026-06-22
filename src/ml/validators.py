@@ -188,7 +188,7 @@ def describe_series(series: dict[str, pd.Series]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def delete_all_for_branch(branch_id, sheet, sheet_config): # for push_results
+def delete_all_for_branch(branch_id, sheet, sheet_config, freq): # for push_results
 
 
     sht, data = next(iter(sheet.items()))
@@ -214,8 +214,9 @@ def delete_all_for_branch(branch_id, sheet, sheet_config): # for push_results
                 f"""
                 DELETE FROM {table_name}
                 WHERE branch_id = %s
+                AND freq = %s
                 """,
-                (branch_id,)
+                (branch_id, freq)
             )
 
             if cur.rowcount > 0:

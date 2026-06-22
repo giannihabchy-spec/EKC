@@ -6,12 +6,12 @@ from ml.modeling import _split
 from ml.config import SEASONAL_PERIOD
 
 
-def fit_sarima(s: pd.Series) -> dict:
+def fit_sarima(s: pd.Series, freq: str = "D") -> dict:
     train, val, test = _split(s)
 
     model = auto_arima(
         train,
-        m=SEASONAL_PERIOD,
+        m=SEASONAL_PERIOD[freq],
         seasonal=True,
         stepwise=True,
         suppress_warnings=True,

@@ -13,6 +13,7 @@ sheet_config = {
         "expected_columns": [
             'branch_id',
             'category',
+            'freq',
             'model',
             'report_date',
             'val_wape',
@@ -27,7 +28,8 @@ sheet_config = {
             "branch_id",
             "report_date",
             "category",
-            'model'
+            'model',
+            'freq'
         ],
 
         "load_mode": "insert",
@@ -40,7 +42,7 @@ sheet_config = {
 }
 
 
-SEASONAL_PERIOD = 7
+SEASONAL_PERIOD = {"D": 7, "W": 52}
 TRAIN_RATIO = 0.70
 VAL_RATIO   = 0.15
 D_LAGS      = [1, 2, 3, 7, 14, 21, 28, 35, 42, 49, 56]

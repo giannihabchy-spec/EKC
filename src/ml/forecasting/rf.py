@@ -16,10 +16,10 @@ n_ests = rf_tuning['n_est']
 
 
 
-def fit_rf(s: pd.Series) -> dict:
+def fit_rf(s: pd.Series, freq: str = "D") -> dict:
     train, val, test = _split(s)
 
-    full_features = _make_features(s)
+    full_features = _make_features(s, freq)
     train_feat = full_features.loc[full_features.index.isin(train.index)]
     val_feat   = full_features.loc[full_features.index.isin(val.index)]
     test_feat = full_features.loc[full_features.index.isin(test.index)]

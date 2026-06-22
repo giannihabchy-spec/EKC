@@ -9,7 +9,12 @@ from ml.config import (
     VAL_RATIO
 )
 from supa.config import SHEET_CONFIG
-from ml.config import LAGS, ROLLS
+from ml.config import (
+    D_LAGS,
+    D_ROLLS,
+    W_LAGS,
+    W_ROLLS,
+)
 
 
 
@@ -98,25 +103,43 @@ def convert_sheet_names_in_dict(sheet):
     }
 
 
-def get_series(df: pd.DataFrame, group_by: str = "category") -> dict[str, pd.Series]:
-    """
-    Split the flat DataFrame into one time series per group.
+# def get_series(df: pd.DataFrame, group_by: str = "category") -> dict[str, pd.Series]:
 
-    group_by: "category" or "item_group"
+#     series = {}
+#     for name, group in df.groupby(group_by):
+#         s = (
+#             group.groupby("date")["sales"]
+#             .sum()
+#             .sort_index()
+#             .asfreq("D")           # daily frequency, NaN on missing days
+#             .fillna(0)
+#         ).round().astype(int)
+#         series[name] = s
+#     return series
 
-    Returns:
-        { group_name: pd.Series(sales, index=date, freq inferred) }
-    """
+
+def get_series(
+    df: pd.DataFrame,
+    group_by: str = "category",
+    freq: str = "D",
+) -> dict[str, pd.Series]:
+
     series = {}
+
     for name, group in df.groupby(group_by):
         s = (
             group.groupby("date")["sales"]
             .sum()
             .sort_index()
-            .asfreq("D")           # daily frequency, NaN on missing days
+            .resample(freq).sum()
+            .asfreq(freq)
             .fillna(0)
-        ).round().astype(int)
+            .round()
+            .astype(int)
+        )
+
         series[name] = s
+
     return series
 
 
@@ -131,23 +154,33 @@ def _split(s: pd.Series) -> tuple[pd.Series, pd.Series, pd.Series]:
     return s.iloc[:train_end], s.iloc[train_end:val_end], s.iloc[val_end:]
 
 
-def _make_features(s: pd.Series) -> pd.DataFrame:
+def _make_features(s: pd.Series, freq: str = "D" ) -> pd.DataFrame:
 
     df = s.rename("sales").to_frame()
 
-    df["day_of_week"] = df.index.dayofweek
-    df["day_of_month"] = df.index.day
+    if freq == 'D':
+        df["day_of_week"] = df.index.dayofweek
+        df["day_of_month"] = df.index.day
+        df["is_weekend"] = (df.index.dayofweek >= 5).astype(int)
+
     df["month"] = df.index.month
     df["year"] = df.index.year
+    df["week_of_month"] = ((df.index.day - 1) // 7 + 1)
     df["weekofyear"] = df.index.isocalendar().week.astype(int)
-    df["is_weekend"] = (df.index.dayofweek >= 5).astype(int)
 
-    for lag in LAGS:
-        df[f"lag_{lag}"] = df["sales"].shift(lag)
+    if freq == 'D':
+        for lag in D_LAGS:
+            df[f"lag_{lag}"] = df["sales"].shift(lag)
+        for window in D_ROLLS:
+            df[f"roll_mean_{window}"] = df["sales"].shift(1).rolling(window).mean()
+            df[f"roll_std_{window}"]  = df["sales"].shift(1).rolling(window).std()
+    else:
+        for lag in W_LAGS:
+            df[f"lag_{lag}"] = df["sales"].shift(lag)  
+        for window in W_ROLLS:
+            df[f"roll_mean_{window}"] = df["sales"].shift(1).rolling(window).mean()
+            df[f"roll_std_{window}"]  = df["sales"].shift(1).rolling(window).std()          
 
-    for window in ROLLS:
-        df[f"roll_mean_{window}"] = df["sales"].shift(1).rolling(window).mean()
-        df[f"roll_std_{window}"]  = df["sales"].shift(1).rolling(window).std()
 
     cols = [c for c in df.columns if c != "sales"]
     df = df.dropna(subset=cols)

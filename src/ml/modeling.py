@@ -103,21 +103,6 @@ def convert_sheet_names_in_dict(sheet):
     }
 
 
-# def get_series(df: pd.DataFrame, group_by: str = "category") -> dict[str, pd.Series]:
-
-#     series = {}
-#     for name, group in df.groupby(group_by):
-#         s = (
-#             group.groupby("date")["sales"]
-#             .sum()
-#             .sort_index()
-#             .asfreq("D")           # daily frequency, NaN on missing days
-#             .fillna(0)
-#         ).round().astype(int)
-#         series[name] = s
-#     return series
-
-
 def get_series(
     df: pd.DataFrame,
     group_by: str = "category",
@@ -125,6 +110,17 @@ def get_series(
 ) -> dict[str, pd.Series]:
 
     series = {}
+
+    series["total_sales"] = (
+        df.groupby("date")["sales"]
+        .sum()
+        .sort_index()
+        .resample(freq).sum()
+        .asfreq(freq)
+        .fillna(0)
+        .round()
+        .astype(int)
+    )
 
     for name, group in df.groupby(group_by):
         s = (

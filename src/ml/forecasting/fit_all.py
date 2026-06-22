@@ -50,9 +50,11 @@ def fit_all(branch_id: int, threshold: float = 0.1, freq: str = "D") -> pd.DataF
                 })
             except Exception as e:
                 rows.append({
-                    "category": category,
-                    "model":    model_name,
-                    "error":    str(e),
+                    "branch_id":  branch_id,
+                    "category":   category,
+                    "freq":       freq,
+                    "model":      model_name,
+                    "result":     json.dumps({"error": str(e)}),
                 })
 
     df = pd.DataFrame(rows)

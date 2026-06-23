@@ -22,15 +22,8 @@ JOBS_CLOUD = [
     },
 
     { # disc_by_desc__sales_by_item -> Discount #### ----------
-    "key": "disc_by_desc__disc_by_invoice",
-    "df_cols": ['description', 'qty'],
-    "sheet": "Discount",
-    "start_row": 2,
-    },
-
-    { # discount by items -> Discount
-    "key": "discount by items",
-    "df_cols": ['description', 'qty'],
+    "key": "final_discount",
+    "df_cols": ['description', 'qty', 'discount_percentage'],
     "sheet": "Discount",
     "start_row": 2,
     },
@@ -141,15 +134,8 @@ JOBS_LOCAL = [
     },
 
     { # disc_by_desc__sales_by_item -> Discount #### ----------
-    "key": "disc_by_desc__disc_by_invoice",
-    "df_cols": ['description', 'qty'],
-    "sheet": "Discount",
-    "start_row": 2,
-    },
-
-    { # discount by items -> Discount
-    "key": "discount by items",
-    "df_cols": ['description', 'qty'],
+    "key": "final_discount",
+    "df_cols": ['description', 'qty', 'discount_percentage'],
     "sheet": "Discount",
     "start_row": 2,
     },

@@ -1,7 +1,7 @@
 import json
 import numpy as np
 import pandas as pd
-from ml.forecasting.registry import MODEL_REGISTRY
+from ml.regestry import MODEL_REGISTRY
 from ml.loaders import load_daily_sales
 from ml.modeling import (
     get_series,
@@ -12,12 +12,7 @@ from ml.modeling import (
 
 
 def fit_all(branch_id: int, threshold: float = 0.1, freq: str = "D") -> pd.DataFrame:
-    """
-    Run every model in MODEL_REGISTRY on every category that passes the
-    near-zero filter. Returns one row per (category, model) combination
-    so you can compare all models side by side, with a `is_best` flag
-    marking the winner per category by WAPE.
-    """
+
     data   = load_daily_sales(branch_id)
     report_date = data['report_date'].max()
 
@@ -62,9 +57,6 @@ def fit_all(branch_id: int, threshold: float = 0.1, freq: str = "D") -> pd.DataF
     if df.empty or "final_wape" not in df.columns:
         return df
 
-    best_idx    = df.groupby("category")["final_wape"].idxmin()
-    df["is_best"] = False
-    df.loc[best_idx, "is_best"] = True
     df['report_date'] = report_date
 
     return df

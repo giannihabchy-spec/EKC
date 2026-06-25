@@ -1,13 +1,9 @@
 from ml.forecasting.fit_all import fit_all
-from ml.config import sheet_config
-from ml.validators import delete_all_for_branch
 from ml.functions.eval import display_results
+from ml.functions.results_io import delete_existing_results, save_results
 import streamlit as st
 from supa.streamlit_functions import get_client_list_for_daily_sales
 from supa.db import get_branch_id
-from ml.validators import delete_all_for_branch
-from supa.db import get_pg_connection
-from supa.loaders import push_sheets
 
 
 st.set_page_config(
@@ -52,7 +48,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
 
     with st.status("Checking existing data...", expanded=True) as delete_st:
-        delete_result = delete_all_for_branch(branch_id, data, sheet_config, freq)
+        delete_result = delete_existing_results(branch_id, data, freq)
         if delete_result['status'] != 'ok':
             st.write(delete_result['msg'])
             delete_st.update(label="Checking existing data", state="error", expanded=True)
@@ -61,18 +57,14 @@ if st.button("▶ Run", type="primary", use_container_width=True):
         delete_st.update(label="Deleting existing data", state="complete", expanded=True)
 
 
-    with st.status("Writing to Database...", expanded=True) as write_st:
-        conn = get_pg_connection()
-        try:
-            load_res = push_sheets(data, sheet_config, conn)
-            if load_res["status"] != "ok":
-                st.write(load_res["message"])
-                write_st.update(label="Writing to Database", state="error", expanded=True)
-                st.stop()
-
+    with st.status("Saving results...", expanded=True) as write_st:
+        load_res = save_results(data)
+        if load_res["status"] != "ok":
             st.write(load_res["message"])
-            write_st.update(label="Writing to Database", state="complete", expanded=True)
-        finally:
-            conn.close()
+            write_st.update(label="Saving results", state="error", expanded=True)
+            st.stop()
+
+        st.write(load_res["message"])
+        write_st.update(label="Results saved", state="complete", expanded=True)
 
     st.success("✅ Done")

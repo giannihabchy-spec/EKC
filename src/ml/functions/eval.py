@@ -35,14 +35,18 @@ def compute_metrics(actual, forecast):
 
 
 def display_results(data):
-    data = data.loc[data['is_best'] == True, ['category', 'from', 'to', 'model', 'final_wape', 'val_wape']].copy()
-    for idx, row in data.iterrows():
-    #     st.markdown(f"Category: {row['category']}     From: {row['from']}     to: {row['to']}     best model: {row['model']}     final wape: {row['final_wape']}")
+    display_cols = ['category', 'model', 'final_wape', 'val_wape']
+    cols = [c for c in display_cols if c in data.columns]
+    view = data[cols].copy()
 
+    has_errors = 'final_wape' in data.columns and data['final_wape'].isna().any()
+    has_errors = has_errors or 'final_wape' not in data.columns
+
+    for category, group in view.groupby('category'):
         with st.container(border=True):
-            st.write(f"Category: {row['category']}")
-            st.write(f"From: {row['from']}")
-            st.write(f"To: {row['to']}")
-            st.write(f"Best model: {row['model']}")
-            st.write(f"Val WAPE: {row['val_wape']}")
-            st.write(f"Final WAPE: {row['final_wape']}")
+            st.write(f"**{category}**")
+            show = group.drop(columns='category').reset_index(drop=True)
+            if 'final_wape' in show.columns and show['final_wape'].isna().all():
+                st.error("All models failed")
+            else:
+                st.dataframe(show, use_container_width=True)

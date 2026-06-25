@@ -68,6 +68,10 @@ def save_results(data):
                 }
             if "final_features" in row and row["final_features"] is not None:
                 entry["final_features"] = row["final_features"]
+            if "test_pred" in row and row["test_pred"] is not None:
+                entry["test_pred"] = row["test_pred"]
+            if "forecast" in row and row["forecast"] is not None:
+                entry["forecast"] = row["forecast"]
             if "from" in row:
                 entry["from"] = row["from"]
             if "to" in row:

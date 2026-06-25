@@ -69,6 +69,31 @@ def _pick_best(all_results: dict) -> dict:
     return best
 
 
+def recursive_forecast(model, s: pd.Series, final_features: list, freq: str, months: int = 8) -> dict:
+    step = pd.Timedelta(days=1) if freq == "D" else pd.Timedelta(weeks=1)
+    max_date = s.index.max()
+    future_dates = pd.date_range(
+        start=max_date + step,
+        end=_horizon_end(max_date, months),
+        freq=freq,
+    )
+
+    history = s.copy()
+    values = []
+    for d in future_dates:
+        feat_df = _make_features(history, freq)
+        last_row = feat_df.iloc[[-1]][final_features]
+        pred = max(0.0, round(float(model.predict(last_row)[0])))
+        history[d] = pred
+        values.append(pred)
+
+    return {
+        "dates": [d.strftime("%Y-%m-%d") for d in future_dates],
+        "values": values,
+    }
+
+
+
 def forecast_daily_sales(branch_id: int, months: int = 2, freq: str = "D") -> dict:
 
     data = load_daily_sales(branch_id)

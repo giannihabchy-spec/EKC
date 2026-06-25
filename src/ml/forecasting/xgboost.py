@@ -8,6 +8,7 @@ from ml.modeling import (
     _make_features,
 )
 from ml.config import xgb_tuning
+from ml.forecast_daily_sales import recursive_forecast
 
 
 n_ests = xgb_tuning['n_est']
@@ -133,6 +134,17 @@ def fit_xgb(s: pd.Series, freq: str = "D") -> dict:
     final_rmse = round(np.sqrt(np.mean((y_test - final_pred) ** 2)), 2)
     final_wape = round(np.sum(np.abs(y_test - final_pred)) / np.sum(np.abs(y_test)) * 100, 2)
 
+    test_pred = {
+        "dates": [d.strftime("%Y-%m-%d") for d in y_test.index],
+        "values": [round(float(v), 2) for v in final_pred],
+    }
+
+    x_full = full_features[final_features]
+    y_full = full_features["sales"]
+    xgb.fit(x_full, y_full)
+
+    forecast = recursive_forecast(xgb, s, final_features, freq)
+
     metrics = {
         "val_wape": val_wape,
         "final_mae": final_mae,
@@ -148,6 +160,8 @@ def fit_xgb(s: pd.Series, freq: str = "D") -> dict:
         "best_params": best_params,
         "metrics": metrics,
         "final_features": final_features,
+        "test_pred": test_pred,
+        "forecast": forecast,
         'from': from_date,
         'to': to_date,
     }

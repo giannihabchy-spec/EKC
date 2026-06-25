@@ -40,6 +40,8 @@ def fit_all(branch_id: int, threshold: float = 0.1, freq: str = "D") -> pd.DataF
                     "final_wape":     result["metrics"]["final_wape"],
                     "best_params":    result["best_params"],
                     "final_features": result["final_features"],
+                    "test_pred":      result["test_pred"],
+                    "forecast":       result["forecast"],
                     "model_obj":      result["model"],
                     "result":    result_to_json(model_name, result),
                 })

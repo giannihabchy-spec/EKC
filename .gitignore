@@ -26,3 +26,4 @@ src/etl/paths.py
 secrets.toml
 scratch.py
 src/ml/results
+old results

@@ -1,3 +1,4 @@
+import os
 import json
 import calendar
 import numpy as np
@@ -10,7 +11,8 @@ from typing import Literal
 from ml.loaders import load_daily_sales
 from ml.modeling import get_series, _split, _make_features
 from ml.config import SEASONAL_PERIOD
-from supa.db import get_last_table
+
+RESULTS_DIR = os.path.join(os.path.dirname(__file__), "results")
 
 
 def _rebuild_model(model_name: str, best_params: dict):
@@ -37,28 +39,52 @@ def _horizon_end(max_date: pd.Timestamp, months: int) -> pd.Timestamp:
     return pd.Timestamp(year=year, month=month, day=last_day)
 
 
+def _load_all_results(branch_id: int, freq: str) -> dict:
+    filename = f"branch_{branch_id}_{freq}.json"
+    all_results = {}
+
+    if not os.path.isdir(RESULTS_DIR):
+        return all_results
+
+    for model_name in os.listdir(RESULTS_DIR):
+        path = os.path.join(RESULTS_DIR, model_name, filename)
+        if not os.path.isfile(path):
+            continue
+        with open(path, "r") as f:
+            data = json.load(f)
+        for category, entry in data.items():
+            all_results.setdefault(category, []).append((model_name, entry))
+
+    return all_results
+
+
+def _pick_best(all_results: dict) -> dict:
+    best = {}
+    for category, entries in all_results.items():
+        winner = min(
+            entries,
+            key=lambda e: e[1].get("metrics", {}).get("final_wape", float("inf")),
+        )
+        best[category] = winner
+    return best
+
+
 def forecast_daily_sales(branch_id: int, months: int = 2, freq: str = "D") -> dict:
 
     data = load_daily_sales(branch_id)
-    results_df = get_last_table(branch_id, "forecast_daily_sales_results")
+    all_results = _load_all_results(branch_id, freq)
 
-    if results_df.empty:
+    if not all_results:
         raise ValueError(f"No forecast results found for branch_id={branch_id}")
 
-    best = results_df[(results_df["is_best"]) & (results_df['freq'] == freq)].copy()
-    best["result"] = best["result"].apply(
-        lambda x: json.loads(x) if isinstance(x, str) else x
-    )
+    best = _pick_best(all_results)
 
     series = get_series(data, "category", freq)
     output = {}
 
     step = pd.Timedelta(days=1) if freq == "D" else pd.Timedelta(weeks=1)
 
-    for _, row in best.iterrows():
-        category = row["category"]
-        model_name = row["model"]
-        result_json = row["result"]
+    for category, (model_name, result_json) in best.items():
         best_params = result_json["best_params"]
         final_features = result_json.get("final_features")
 
@@ -93,6 +119,9 @@ def forecast_daily_sales(branch_id: int, months: int = 2, freq: str = "D") -> di
             forecast_values = np.clip(sarima_model.predict(n_periods=len(future_dates)), 0, None).round()
         else:
             full_features = _make_features(s, freq)
+            feature_cols = [c for c in full_features.columns if c != "sales"]
+            if final_features is None:
+                final_features = feature_cols
 
             x_train_val = full_features.loc[full_features.index.isin(train_val_idx), final_features]
             y_train_val = full_features.loc[full_features.index.isin(train_val_idx), "sales"]
@@ -130,25 +159,20 @@ def forecast_daily_sales(branch_id: int, months: int = 2, freq: str = "D") -> di
 def forecast_daily_sales_by_model(branch_id: int, m: Literal['rf','xgb','sarima'], months: int = 2, freq: str = "D") -> dict:
 
     data = load_daily_sales(branch_id)
-    results_df = get_last_table(branch_id, "forecast_daily_sales_results")
+    path = os.path.join(RESULTS_DIR, m, f"branch_{branch_id}_{freq}.json")
 
-    if results_df.empty:
-        raise ValueError(f"No forecast results found for branch_id={branch_id}")
+    if not os.path.isfile(path):
+        raise ValueError(f"No results found for model={m}, branch_id={branch_id}, freq={freq}")
 
-    best = results_df[(results_df["model"] == m) & (results_df['freq'] == freq)].copy()
-    best["result"] = best["result"].apply(
-        lambda x: json.loads(x) if isinstance(x, str) else x
-    )
+    with open(path, "r") as f:
+        results = json.load(f)
 
     series = get_series(data, "category", freq)
     output = {}
 
     step = pd.Timedelta(days=1) if freq == "D" else pd.Timedelta(weeks=1)
 
-    for _, row in best.iterrows():
-        category = row["category"]
-        model_name = row["model"]
-        result_json = row["result"]
+    for category, result_json in results.items():
         best_params = result_json["best_params"]
         final_features = result_json.get("final_features")
 
@@ -167,7 +191,7 @@ def forecast_daily_sales_by_model(branch_id: int, m: Literal['rf','xgb','sarima'
             freq=freq,
         )
 
-        if model_name == "sarima":
+        if m == "sarima":
             sarima_model = auto_arima(
                 s.loc[train_val_idx],
                 m=SEASONAL_PERIOD[freq],
@@ -189,7 +213,7 @@ def forecast_daily_sales_by_model(branch_id: int, m: Literal['rf','xgb','sarima'
             x_test = full_features.loc[full_features.index.isin(test_idx), final_features]
             y_test = full_features.loc[full_features.index.isin(test_idx), "sales"]
 
-            model = _rebuild_model(model_name, best_params)
+            model = _rebuild_model(m, best_params)
             model.fit(x_train_val, y_train_val)
             test_pred = model.predict(x_test)
 
@@ -205,7 +229,7 @@ def forecast_daily_sales_by_model(branch_id: int, m: Literal['rf','xgb','sarima'
         y_test = s.loc[test_idx]
 
         output[category] = {
-            "model": model_name,
+            "model": m,
             "train_val": s.loc[train_val_idx],
             "test_actual": y_test,
             "test_pred": pd.Series(np.array(test_pred), index=test_idx, name="test_pred"),

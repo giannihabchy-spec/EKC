@@ -58,14 +58,21 @@ def save_results(data):
             existing = {}
 
         for _, row in group.iterrows():
+            metric_keys = ["val_wape", "final_mae", "final_rmse", "final_wape"]
+            has_metrics = any(
+                k in row and row.get(k) is not None and not (isinstance(row.get(k), float) and row.get(k) != row.get(k))
+                for k in metric_keys
+            )
+            if not has_metrics:
+                continue
+
             entry = {}
             if "best_params" in row and row["best_params"] is not None:
                 entry["best_params"] = row["best_params"]
-            if "metrics" not in row:
-                entry["metrics"] = {
-                    k: row[k] for k in ["val_wape", "final_mae", "final_rmse", "final_wape"]
-                    if k in row and row.get(k) is not None
-                }
+            entry["metrics"] = {
+                k: row[k] for k in metric_keys
+                if k in row and row.get(k) is not None
+            }
             if "final_features" in row and row["final_features"] is not None:
                 entry["final_features"] = row["final_features"]
             if "test_pred" in row and row["test_pred"] is not None:

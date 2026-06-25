@@ -284,7 +284,8 @@ SHEET_CONFIG = {
             'description', 
             'qty', 
             'category', 
-            'month'
+            'month',
+            'discount_percentage'
         ],
 
         "date_column": "month",
@@ -307,7 +308,9 @@ SHEET_CONFIG = {
 
         "no_nulls": [
             'description', 
-            'qty'
+            'qty',
+            'discount_percentage'
+
         ]
     },
 

@@ -1,6 +1,6 @@
 import pandas as pd
 import json
-from supa.db import get_monthly_rates
+from supa.db import get_monthly_rates, get_pg_connection
 from etl.utils import make_columns_date
 from supa.db import get_omega_currency
 from ml.config import (
@@ -15,6 +15,64 @@ from ml.config import (
     W_LAGS,
     W_ROLLS,
 )
+
+_holidays_cache = None
+
+HOLIDAY_TYPES = ["public_holiday", "government_holiday", "observance"]
+
+
+def _load_holidays():
+    global _holidays_cache
+    if _holidays_cache is not None:
+        return _holidays_cache
+
+    conn = get_pg_connection()
+    try:
+        _holidays_cache = pd.read_sql("SELECT date, type FROM holidays", conn, parse_dates=["date"])
+    finally:
+        conn.close()
+
+    _holidays_cache["type_key"] = (
+        _holidays_cache["type"]
+        .str.lower()
+        .str.replace(" ", "_")
+    )
+    return _holidays_cache
+
+
+def _add_holiday_features(df: pd.DataFrame, freq: str) -> pd.DataFrame:
+    holidays = _load_holidays()
+
+    for type_key in HOLIDAY_TYPES:
+        h_dates = set(holidays.loc[holidays["type_key"] == type_key, "date"].dt.normalize())
+
+        if freq == "D":
+            df[f"is_{type_key}"] = df.index.normalize().isin(h_dates).astype(int)
+            pre_dates = {d - pd.Timedelta(days=1) for d in h_dates}
+            post_dates = {d + pd.Timedelta(days=1) for d in h_dates}
+            df[f"pre_{type_key}"] = df.index.normalize().isin(pre_dates).astype(int)
+            df[f"post_{type_key}"] = df.index.normalize().isin(post_dates).astype(int)
+
+            df[f"week_contain_{type_key}"] = 0
+            df[f"week_contain_multiple_{type_key}"] = 0
+            for d in h_dates:
+                week_start = d - pd.Timedelta(days=d.weekday())
+                week_end = week_start + pd.Timedelta(days=6)
+                mask = (df.index.normalize() >= week_start) & (df.index.normalize() <= week_end)
+                df.loc[mask, f"week_contain_{type_key}"] += 1
+            df[f"week_contain_multiple_{type_key}"] = (df[f"week_contain_{type_key}"] > 1).astype(int)
+            df[f"week_contain_{type_key}"] = (df[f"week_contain_{type_key}"] > 0).astype(int)
+
+        else:
+            df[f"contain_{type_key}"] = 0
+            df[f"contain_multiple_{type_key}"] = 0
+            for d in h_dates:
+                mask = (df.index.normalize() <= d) & (d <= df.index.normalize() + pd.Timedelta(days=6))
+                df.loc[mask, f"contain_{type_key}"] += 1
+            df[f"contain_multiple_{type_key}"] = (df[f"contain_{type_key}"] > 1).astype(int)
+            df[f"contain_{type_key}"] = (df[f"contain_{type_key}"] > 0).astype(int)
+
+    return df
 
 
 
@@ -177,6 +235,8 @@ def _make_features(s: pd.Series, freq: str = "D" ) -> pd.DataFrame:
             df[f"roll_mean_{window}"] = df["sales"].shift(1).rolling(window).mean()
             df[f"roll_std_{window}"]  = df["sales"].shift(1).rolling(window).std()          
 
+
+    df = _add_holiday_features(df, freq)
 
     cols = [c for c in df.columns if c != "sales"]
     df = df.dropna(subset=cols)

@@ -85,6 +85,8 @@ def plot_by_model(branch_id: int, model: str, freq: str, figsize: tuple = (16, 5
     data = load_daily_sales(branch_id)
     series = get_series(data, "category", freq)
     results = _load_results(model, branch_id, freq)
+    for entry in results.values():
+        entry.setdefault("model", model)
     _plot(series, results, figsize)
 
 

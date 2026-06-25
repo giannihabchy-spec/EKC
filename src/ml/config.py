@@ -71,6 +71,15 @@ xgb_tuning = {
     'colsample_bytree': [0.8, 1.0],
 }
 
+nhits_tuning = {
+    "lookback": [30, 60],
+    "hidden_size": [64, 128],
+    "n_stacks": [2, 3],
+    "lr": [0.001, 0.005],
+}
+
+
+
 # rf_tuning = {
 #     'max_depth': [5],
 #     'min_samples_leaf': [1],
@@ -84,4 +93,11 @@ xgb_tuning = {
 #     'max_depth': [3],
 #     'subsample': [0.8],
 #     'colsample_bytree': [0.8],
+# }
+
+# nhits_tuning = {
+#     "lookback": [30],
+#     "hidden_size": [64],
+#     "n_stacks": [2],
+#     "lr": [0.001],
 # }

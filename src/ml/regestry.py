@@ -3,13 +3,15 @@ from ml.forecasting.xgboost import fit_xgb
 from ml.forecasting.sarima import fit_sarima
 from ml.forecasting.nhits import fit_nhits, fit_single_nhits
 from ml.forecasting.tft import fit_tft, fit_single_tft
+from ml.forecasting.lgbm import fit_lgbm
 
 MODEL_REGISTRY = {
     # "rf":  fit_rf,
     # "xgb": fit_xgb,
     # "sarima": fit_sarima,
     # "nhits": fit_nhits,
-    "tft": fit_tft,
+    # "tft": fit_tft,
+    "lgbm": fit_lgbm,
 }
 
 MULTI_REGISTRY = {

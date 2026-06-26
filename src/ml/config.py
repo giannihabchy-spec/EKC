@@ -98,6 +98,15 @@ xgb_tuning = {
     'colsample_bytree': [0.8, 1.0],
 }
 
+lgbm_tuning = {
+    'n_est': [100, 300, 500],
+    'learning_rate': [0.01, 0.05, 0.1],
+    'max_depth': [3, 5, 7],
+    'subsample': [0.8, 1.0],
+    'colsample_bytree': [0.8, 1.0],
+    'num_leaves': [31, 63],
+}
+
 nhits_tuning = {
     "lookback": [30, 60],
     "hidden_size": [64, 128],

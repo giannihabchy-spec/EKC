@@ -7,18 +7,27 @@ from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import mean_absolute_error
 from ml.modeling import _split, _add_holiday_features
 from ml.config import tft_tuning
-from ml.forecasting.nhits import _make_covariates, WindowDataset, MultiWindowDataset, _train
+from ml.forecasting.nhits import _make_covariates, WindowDataset, MultiWindowDataset
 
 
 # ── TFT Components ─────────────────────────────────────────────────────
+
+class GatedLinearUnit(nn.Module):
+    def __init__(self, input_dim, output_dim):
+        super().__init__()
+        self.fc = nn.Linear(input_dim, output_dim)
+        self.gate = nn.Linear(input_dim, output_dim)
+
+    def forward(self, x):
+        return self.fc(x) * torch.sigmoid(self.gate(x))
+
 
 class GatedResidualNetwork(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim=None, dropout=0.1):
         super().__init__()
         output_dim = output_dim or input_dim
         self.fc1 = nn.Linear(input_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, output_dim)
-        self.gate = nn.Linear(hidden_dim, output_dim)
+        self.glu = GatedLinearUnit(hidden_dim, output_dim)
         self.dropout = nn.Dropout(dropout)
         self.layer_norm = nn.LayerNorm(output_dim)
         self.skip = nn.Linear(input_dim, output_dim) if input_dim != output_dim else None
@@ -27,33 +36,7 @@ class GatedResidualNetwork(nn.Module):
         residual = x if self.skip is None else self.skip(x)
         h = torch.nn.functional.elu(self.fc1(x))
         h = self.dropout(h)
-        out = self.fc2(h) * torch.sigmoid(self.gate(h))
-        return self.layer_norm(out + residual)
-
-
-class VariableSelectionNetwork(nn.Module):
-    def __init__(self, input_dim, n_vars, hidden_dim, dropout=0.1):
-        super().__init__()
-        self.n_vars = n_vars
-        self.per_var_dim = input_dim // n_vars
-        self.grns = nn.ModuleList([
-            GatedResidualNetwork(self.per_var_dim, hidden_dim, hidden_dim, dropout)
-            for _ in range(n_vars)
-        ])
-        self.softmax_grn = GatedResidualNetwork(input_dim, hidden_dim, n_vars, dropout)
-        self.output_dim = hidden_dim
-
-    def forward(self, x):
-        # x: (batch, seq, input_dim)
-        weights = torch.softmax(self.softmax_grn(x), dim=-1)  # (batch, seq, n_vars)
-        var_outputs = []
-        for i, grn in enumerate(self.grns):
-            start = i * self.per_var_dim
-            end = start + self.per_var_dim
-            var_outputs.append(grn(x[..., start:end]))
-        var_outputs = torch.stack(var_outputs, dim=-1)  # (batch, seq, hidden_dim, n_vars)
-        selected = (var_outputs * weights.unsqueeze(-2)).sum(dim=-1)  # (batch, seq, hidden_dim)
-        return selected
+        return self.layer_norm(self.glu(h) + residual)
 
 
 class InterpretableMultiHeadAttention(nn.Module):
@@ -68,70 +51,83 @@ class InterpretableMultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, q, k, v):
-        batch = q.size(0)
-        seq_len = q.size(1)
-
+        batch, seq_len = q.size(0), q.size(1)
         Q = self.q_proj(q).view(batch, seq_len, self.n_heads, self.head_dim).transpose(1, 2)
         K = self.k_proj(k).view(batch, seq_len, self.n_heads, self.head_dim).transpose(1, 2)
-        V = self.v_proj(v)  # (batch, seq, head_dim) — shared across heads
-
-        scale = self.head_dim ** 0.5
-        attn = torch.matmul(Q, K.transpose(-2, -1)) / scale
-        attn = torch.softmax(attn, dim=-1)
-        attn = self.dropout(attn)
-
-        # interpretable: average attention across heads, apply to shared V
-        attn_avg = attn.mean(dim=1)  # (batch, seq, seq)
-        out = torch.matmul(attn_avg, V)  # (batch, seq, head_dim)
+        V = self.v_proj(v)
+        attn = torch.matmul(Q, K.transpose(-2, -1)) / (self.head_dim ** 0.5)
+        attn = self.dropout(torch.softmax(attn, dim=-1))
+        out = torch.matmul(attn.mean(dim=1), V)
         return self.out_proj(out)
 
 
 # ── TFT Model ──────────────────────────────────────────────────────────
 
 class TFT(nn.Module):
-    def __init__(self, input_dim, lookback, hidden_size=128, n_heads=4,
+    def __init__(self, input_dim, lookback, hidden_size=64, n_heads=2,
                  dropout=0.1, output_dim=1):
         super().__init__()
-        self.output_dim = output_dim
-        self.lookback = lookback
-
         self.input_proj = nn.Linear(input_dim, hidden_size)
+        self.vsn_weights = nn.Linear(hidden_size, hidden_size)
+        self.vsn_grn = GatedResidualNetwork(hidden_size, hidden_size, dropout=dropout)
 
-        n_vars = input_dim
-        self.vsn = VariableSelectionNetwork(
-            hidden_size, n_vars=min(n_vars, hidden_size), hidden_dim=hidden_size, dropout=dropout,
-        )
-
-        self.lstm_encoder = nn.LSTM(hidden_size, hidden_size, batch_first=True)
-
+        self.lstm = nn.LSTM(hidden_size, hidden_size, batch_first=True)
         self.post_lstm_gate = GatedResidualNetwork(hidden_size, hidden_size, dropout=dropout)
-        self.post_lstm_norm = nn.LayerNorm(hidden_size)
 
         self.attention = InterpretableMultiHeadAttention(hidden_size, n_heads, dropout)
         self.post_attn_gate = GatedResidualNetwork(hidden_size, hidden_size, dropout=dropout)
-        self.post_attn_norm = nn.LayerNorm(hidden_size)
 
-        self.output_grn = GatedResidualNetwork(hidden_size, hidden_size, dropout=dropout)
         self.output_fc = nn.Linear(hidden_size, output_dim)
 
     def forward(self, x):
-        # x: (batch, lookback, input_dim)
-        h = self.input_proj(x)  # (batch, lookback, hidden_size)
+        h = self.input_proj(x)
+        weights = torch.softmax(self.vsn_weights(h), dim=-1)
+        h = self.vsn_grn(h * weights)
 
-        vsn_out = self.vsn(h)
-
-        lstm_out, _ = self.lstm_encoder(vsn_out)
-
-        gated = self.post_lstm_gate(lstm_out)
-        temporal = self.post_lstm_norm(gated + vsn_out)
+        lstm_out, _ = self.lstm(h)
+        temporal = self.post_lstm_gate(lstm_out) + h
 
         attn_out = self.attention(temporal, temporal, temporal)
-        attn_gated = self.post_attn_gate(attn_out)
-        enriched = self.post_attn_norm(attn_gated + temporal)
+        enriched = self.post_attn_gate(attn_out) + temporal
 
-        last = enriched[:, -1, :]  # (batch, hidden_size)
-        out = self.output_grn(last)
-        return self.output_fc(out)  # (batch, output_dim)
+        return self.output_fc(enriched[:, -1, :])
+
+
+# ── Training ───────────────────────────────────────────────────────────
+
+def _train_tft(model, train_loader, val_loader, lr, epochs=50, patience=8):
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    best_loss = float("inf")
+    best_state = None
+    wait = 0
+
+    for _ in range(epochs):
+        model.train()
+        for xb, yb in train_loader:
+            loss = nn.functional.l1_loss(model(xb), yb)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+        model.eval()
+        with torch.no_grad():
+            val_loss = np.mean([
+                nn.functional.l1_loss(model(xb), yb).item()
+                for xb, yb in val_loader
+            ])
+
+        if val_loss < best_loss:
+            best_loss = val_loss
+            best_state = {k: v.clone() for k, v in model.state_dict().items()}
+            wait = 0
+        else:
+            wait += 1
+            if wait >= patience:
+                break
+
+    if best_state is not None:
+        model.load_state_dict(best_state)
+    return model
 
 
 # ── Single-category fit ────────────────────────────────────────────────
@@ -184,7 +180,7 @@ def fit_tft(s: pd.Series, freq: str = "D") -> dict:
                     val_loader = DataLoader(val_ds, batch_size=64)
 
                     model = TFT(input_dim, lookback, hidden_size, n_heads)
-                    model = _train(model, train_loader, val_loader, lr)
+                    model = _train_tft(model, train_loader, val_loader, lr)
 
                     model.eval()
                     val_preds = []
@@ -232,7 +228,7 @@ def fit_tft(s: pd.Series, freq: str = "D") -> dict:
     model.load_state_dict(best_state)
     train_val_loader = DataLoader(train_val_ds, batch_size=64, shuffle=True)
     test_loader = DataLoader(test_ds, batch_size=64)
-    model = _train(model, train_val_loader, test_loader, best_params["lr"])
+    model = _train_tft(model, train_val_loader, test_loader, best_params["lr"])
 
     model.eval()
     test_preds = []
@@ -254,23 +250,21 @@ def fit_tft(s: pd.Series, freq: str = "D") -> dict:
 
     full_ds = WindowDataset(full_sales_norm, cov_values, lookback)
     full_loader = DataLoader(full_ds, batch_size=64, shuffle=True)
-    model = _train(model, full_loader, full_loader, best_params["lr"], epochs=50, patience=5)
+    model = _train_tft(model, full_loader, full_loader, best_params["lr"], epochs=30, patience=5)
 
     forecast = _recursive_forecast_tft(
         model, s, covariates, lookback, sales_mean, sales_std, freq,
     )
 
-    metrics = {
-        "val_wape": val_wape,
-        "final_mae": final_mae,
-        "final_rmse": final_rmse,
-        "final_wape": final_wape,
-    }
-
     return {
         "model": model,
         "best_params": best_params,
-        "metrics": metrics,
+        "metrics": {
+            "val_wape": val_wape,
+            "final_mae": final_mae,
+            "final_rmse": final_rmse,
+            "final_wape": final_wape,
+        },
         "final_features": None,
         "norm_params": {"mean": float(sales_mean), "std": float(sales_std)},
         "test_pred": test_pred,
@@ -381,7 +375,7 @@ def fit_single_tft(series: dict, freq: str = "D") -> dict:
                     val_loader = DataLoader(val_ds, batch_size=64)
 
                     model = TFT(input_dim, lookback, hidden_size, n_heads, output_dim=n_cat)
-                    model = _train(model, train_loader, val_loader, lr)
+                    model = _train_tft(model, train_loader, val_loader, lr)
 
                     model.eval()
                     val_preds = []
@@ -425,7 +419,7 @@ def fit_single_tft(series: dict, freq: str = "D") -> dict:
     model.load_state_dict(best_state)
     train_val_loader = DataLoader(train_val_ds, batch_size=64, shuffle=True)
     test_loader = DataLoader(test_ds, batch_size=64)
-    model = _train(model, train_val_loader, test_loader, best_params["lr"])
+    model = _train_tft(model, train_val_loader, test_loader, best_params["lr"])
 
     model.eval()
     test_preds_list = []
@@ -439,7 +433,7 @@ def fit_single_tft(series: dict, freq: str = "D") -> dict:
 
     full_ds = MultiWindowDataset(sales_norm, cov_values, lookback)
     full_loader = DataLoader(full_ds, batch_size=64, shuffle=True)
-    model = _train(model, full_loader, full_loader, best_params["lr"], epochs=50, patience=5)
+    model = _train_tft(model, full_loader, full_loader, best_params["lr"], epochs=30, patience=5)
 
     # Recursive forecast
     step = pd.Timedelta(days=1) if freq == "D" else pd.Timedelta(weeks=1)
@@ -474,7 +468,6 @@ def fit_single_tft(series: dict, freq: str = "D") -> dict:
             for j, cat in enumerate(categories):
                 forecast_values[cat].append(float(pred_orig[j]))
 
-    # Build per-category results
     output = {}
     y_test_all = sales_df.values[n_train_val: n_train_val + len(test_preds_orig)]
 

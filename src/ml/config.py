@@ -1,4 +1,4 @@
-config_map = { # preprocesor name : sheet name in supa/config
+config_map = { # preprocesor name : sheet name in supa/config }
     'sales by items': 'Sales',
     'sales by category': 'Sales. Cat.',
     'monthly sales by items': 'Sales',
@@ -6,26 +6,21 @@ config_map = { # preprocesor name : sheet name in supa/config
 }
 
 sheet_config = {
-       "results": { ############################################################################################
-        "target_table": "forecast_daily_sales_results",
+       "forecasts": { ############################################################################################
+        "target_table": "forecast_daily_sales",
 
         "expected_columns": [
             'branch_id',
             'category',
             'freq',
             'model',
-            'report_date',
-            'val_wape',
-            'final_mae',
-            'final_rmse',
-            'final_wape',
-            'is_best',
-            'result'
+            'date',
+            'sales',
         ],
 
         "unique_key": [
             "branch_id",
-            "report_date",
+            "date",
             "category",
             'model',
             'freq'
@@ -34,8 +29,44 @@ sheet_config = {
         "load_mode": "insert",
 
         "no_nulls": [
-            'category', 
-            'sales'
+            "branch_id",
+            "date",
+            "category",
+            'model',
+            'freq',
+            'sales',
+        ]
+    },
+
+       "test_pred": { ############################################################################################
+        "target_table": "test_pred_daily_sales",
+
+        "expected_columns": [
+            'branch_id',
+            'category',
+            'freq',
+            'model',
+            'date',
+            'sales',
+        ],
+
+        "unique_key": [
+            "branch_id",
+            "date",
+            "category",
+            'model',
+            'freq'
+        ],
+
+        "load_mode": "insert",
+
+        "no_nulls": [
+            "branch_id",
+            "date",
+            "category",
+            'model',
+            'freq',
+            'sales',
         ]
     },
 }

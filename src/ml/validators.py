@@ -99,74 +99,74 @@ def find_existing_data(conn, sheet, sheet_config, branch_id):
         }
     
 
-def delete_existing_data(conn, sheet, sheet_config, branch_id):
-    conn.rollback()
+# def delete_existing_data(conn, sheet, sheet_config, branch_id):
+#     conn.rollback()
 
-    sht, data = next(iter(sheet.items()))
+#     sht, data = next(iter(sheet.items()))
 
-    # data = make_columns_date(data, ["report_date"])
+#     # data = make_columns_date(data, ["report_date"])
 
-    config = sheet_config.get(sht)
-    if config is None:
-        raise KeyError(
-            f"No config found for sheet '{sht}'. "
-            f"Available configs: {list(sheet_config.keys())}"
-        )
+#     config = sheet_config.get(sht)
+#     if config is None:
+#         raise KeyError(
+#             f"No config found for sheet '{sht}'. "
+#             f"Available configs: {list(sheet_config.keys())}"
+#         )
 
-    table = config["target_table"]
-    table_name = safe_ident(table)
+#     table = config["target_table"]
+#     table_name = safe_ident(table)
 
-    dates = data["report_date"].drop_duplicates()
-    deleted_rows = []
+#     dates = data["report_date"].drop_duplicates()
+#     deleted_rows = []
 
-    try:
-        for date in dates:
-            year = date.year
-            month = date.month
+#     try:
+#         for date in dates:
+#             year = date.year
+#             month = date.month
 
-            start_date = date.replace(day=1)
+#             start_date = date.replace(day=1)
 
-            if month == 12:
-                end_date = date.replace(year=year + 1, month=1, day=1)
-            else:
-                end_date = date.replace(month=month + 1, day=1)
+#             if month == 12:
+#                 end_date = date.replace(year=year + 1, month=1, day=1)
+#             else:
+#                 end_date = date.replace(month=month + 1, day=1)
 
-            with conn.cursor() as cur:
-                cur.execute(
-                    f"""
-                    DELETE FROM {table_name}
-                    WHERE branch_id = %s
-                      AND report_date >= %s
-                      AND report_date < %s
-                      AND old_data = 1
-                    """,
-                    (branch_id, start_date, end_date)
-                )
+#             with conn.cursor() as cur:
+#                 cur.execute(
+#                     f"""
+#                     DELETE FROM {table_name}
+#                     WHERE branch_id = %s
+#                       AND report_date >= %s
+#                       AND report_date < %s
+#                       AND old_data = 1
+#                     """,
+#                     (branch_id, start_date, end_date)
+#                 )
 
-                if cur.rowcount > 0:
-                    deleted_rows.append(
-                        f"{month}/{year} → {cur.rowcount} row(s) deleted"
-                    )
+#                 if cur.rowcount > 0:
+#                     deleted_rows.append(
+#                         f"{month}/{year} → {cur.rowcount} row(s) deleted"
+#                     )
 
-        conn.commit()
+#         conn.commit()
 
-    except Exception as e:
-        conn.rollback()
-        return {
-            "status": "error",
-            "msg": f"Delete failed: {e}"
-        }
+#     except Exception as e:
+#         conn.rollback()
+#         return {
+#             "status": "error",
+#             "msg": f"Delete failed: {e}"
+#         }
 
-    if deleted_rows:
-        return {
-            "status": "ok",
-            "msg": "Deleted existing data from:  \n" + "  \n".join(deleted_rows)
-        }
+#     if deleted_rows:
+#         return {
+#             "status": "ok",
+#             "msg": "Deleted existing data from:  \n" + "  \n".join(deleted_rows)
+#         }
 
-    return {
-        "status": "warning",
-        "msg": "Existing data is not old"
-    }
+#     return {
+#         "status": "warning",
+#         "msg": "Existing data is not old"
+#     }
 
 
 def describe_series(series: dict[str, pd.Series]) -> pd.DataFrame:
@@ -188,63 +188,112 @@ def describe_series(series: dict[str, pd.Series]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def delete_all_for_branch(branch_id, sheet, sheet_config, freq): # for push_results
+# def update_supa_results(results, sheet_config, branch_id, category, freq, model):
+#     conn = get_pg_connection()
+#     conn.rollback()
 
+#     tables = [sht['target_table'] for sht in sheet_config.values()]
 
-    sht, data = next(iter(sheet.items()))
+#     deleted_tables = []
 
+#     data = next(iter(results.values()))
+#     cats = list(data['category'].drop_duplicates())
+#     models = list(data['model'].drop_duplicates())
 
-    config = sheet_config.get(sht)
-    if config is None:
-        raise KeyError(
-            f"No config found for sheet '{sht}'. "
-            f"Available configs: {list(sheet_config.keys())}"
-        )
+#     try:
+#         with conn.cursor() as cur:
+#             for table in tables:
+#                 table_name = safe_ident(table)
 
-    table = config["target_table"]
-    table_name = safe_ident(table)
+#                 cur.execute(
+#                     f"""
+#                     delete from {table_name}
+#                     where branch_id = %s
+#                     and category = any(%s)
+#                     and freq = %s
+#                     and model = any(%s)
+#                     """,
+#                     (branch_id, cats, freq, models)
+#                 )
 
-    deleted_rows = []
-    conn = None
+#             if cur.rowcount > 0:
+#                 deleted_tables.append(f"{table} → {cur.rowcount} row(s) deleted")
+
+#         conn.commit()
+
+#         if deleted_tables:
+#             return {
+#                 "status": "ok",
+#                 "msg": "Deleted existing data from:  \n" + "  \n".join(deleted_tables)
+#             }
+#         else:
+#             return {
+#                 "status": "warning",
+#                 "msg": "No existing data found to delete."
+#             }
+
+#     except Exception as e:
+#         conn.rollback()
+#         return {
+#             "status": "error",
+#             "msg": f"Delete failed: {e}"
+#         }
+    
+
+def update_supa_results(results, sheet_config):
+    conn = get_pg_connection()
+    conn.rollback()
+
+    tables = [sht["target_table"] for sht in sheet_config.values()]
+    deleted_tables = []
+
+    data = next(iter(results.values()))
+
+    ids = list(data["branch_id"].drop_duplicates())
+    cats = list(data["category"].drop_duplicates())
+    models = list(data["model"].drop_duplicates())
+    freqs = list(data['freq'].drop_duplicates())
 
     try:
-        conn = get_pg_connection()
         with conn.cursor() as cur:
-            cur.execute(
-                f"""
-                DELETE FROM {table_name}
-                WHERE branch_id = %s
-                AND freq = %s
-                """,
-                (branch_id, freq)
-            )
+            for table in tables:
+                table_name = safe_ident(table)
 
-            if cur.rowcount > 0:
-                deleted_rows.append(
-                    f"{cur.rowcount} row(s) deleted"
+                cur.execute(
+                    f"""
+                    DELETE FROM {table_name}
+                    WHERE branch_id = ANY(%s)
+                      AND category = ANY(%s)
+                      AND freq = ANY(%s)
+                      AND model = ANY(%s)
+                    """,
+                    (ids, cats, freqs, models)
                 )
+
+                if cur.rowcount > 0:
+                    deleted_tables.append(
+                        f"{table} → {cur.rowcount} row(s) deleted"
+                    )
 
         conn.commit()
 
-    except Exception as e:
-        if conn:
-            conn.rollback()
+        if deleted_tables:
+            return {
+                "status": "deleted_data",
+                "msg": "Deleted existing data from:  \n" + "  \n".join(deleted_tables)
+            }
 
+        return {
+            "status": "no_data",
+            "msg": "No existing data found to delete."
+        }
+
+    except Exception as e:
+        conn.rollback()
         return {
             "status": "error",
             "msg": f"Delete failed: {e}"
         }
+
     finally:
-        if conn:
-            conn.close()
-
-    if deleted_rows:
-        return {
-            "status": "ok",
-            "msg": "Deleted existing data from:  \n" + "  \n".join(deleted_rows)
-        }
-
-    return {
-        "status": "ok",
-        "msg": "No existing data found"
-    }
+        conn.close()

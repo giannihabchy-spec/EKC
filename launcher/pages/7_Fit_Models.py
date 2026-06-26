@@ -5,4 +5,4 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from _page_loader import load_app
 
-load_app("push_results.py")
+load_app("fit_models.py")

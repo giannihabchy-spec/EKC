@@ -51,10 +51,6 @@ W_LAGS      = [1, 2, 3, 4, 8, 12, 13, 26, 52]
 D_ROLLS     = [7, 14, 30, 90]
 W_ROLLS     = [4, 8, 13, 26, 52]
 
-# D_LAGS      = [1, 2, 3, 7, 14]
-# W_LAGS      = [1, 2, 3, 4]
-# D_ROLLS     = [7, 14, 30]
-# W_ROLLS     = [4, 8]
 
 rf_tuning = {
     'max_depth': [5, 10, 20, 50],
@@ -78,6 +74,20 @@ nhits_tuning = {
     "lr": [0.001, 0.005],
 }
 
+tft_tuning = {
+    "lookback": [30, 60],
+    "hidden_size": [64, 128],
+    "n_heads": [2, 4],
+    "lr": [0.001, 0.005],
+}
+
+
+
+
+# D_LAGS      = [1, 2, 3, 7, 14]
+# W_LAGS      = [1, 2, 3, 4]
+# D_ROLLS     = [7, 14, 30]
+# W_ROLLS     = [4, 8]
 
 
 # rf_tuning = {
@@ -100,4 +110,11 @@ nhits_tuning = {
 #     "hidden_size": [64],
 #     "n_stacks": [2],
 #     "lr": [0.001],
+# }
+
+# tft_tuning = {
+#     "lookback": [30],
+#     "hidden_size": [64],
+#     "n_heads": [2],
+#     "lr": [0.005],
 # }

@@ -290,19 +290,19 @@ SHEET_CONFIG = {
 
         "date_column": "month",
 
-        "group_before_load": True,
-        "group_by": ["description"],
-        "agg": {
-            "qty": "sum",
-            "category": "first",
-            "month": "first",
-        },
+        # "group_before_load": True,
+        # "group_by": ["description"],
+        # "agg": {
+        #     "qty": "sum",
+        #     "category": "first",
+        #     "month": "first",
+        # },
 
-        "unique_key": [
-            "branch_id",
-            "report_date",
-            "description"
-        ],
+        # "unique_key": [
+        #     "branch_id",
+        #     "report_date",
+        #     "description"
+        # ],
 
         "load_mode": "insert",
 

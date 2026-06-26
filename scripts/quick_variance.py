@@ -16,7 +16,6 @@ _ensure_supa_env_from_secrets()
 
 from etl.config import get_jobs
 from etl.orchestrator import clean_folder, cleaner_by_code
-from etl.merger import merge
 from etl.strip_all import strip_all
 from etl.special_characters import special_char
 from etl.saver import save_cleaned_data
@@ -140,7 +139,6 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             status_clean.update(label='Empty folder',state="error", expanded=True)
             st.stop()
 
-        cleaned = merge(cleaned)
         cleaned = strip_all(cleaned)
         cleaned = special_char(cleaned)
         save_cleaned_data(cleaned, base_folder)

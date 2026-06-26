@@ -1,20 +1,43 @@
 from ml.forecasting.fit_all import fit_all
 from ml.functions.eval import display_results
 from ml.functions.results_io import delete_existing_results, save_results
+from ml.regestry import MODEL_REGISTRY, MULTI_REGISTRY
 import streamlit as st
 from supa.streamlit_functions import get_client_list_for_daily_sales
 from supa.db import get_branch_id
 
 
 st.set_page_config(
-    page_title="Push Results",
+    page_title="Fit Models",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-st.title("Push Results")
+st.title("Fit Models")
 st.markdown("---")
 
+single_models = list(MODEL_REGISTRY.keys())
+multi_models = list(MULTI_REGISTRY.keys())
 
+if single_models or multi_models:
+    col_s, col_m = st.columns(2)
+    with col_s:
+        st.markdown("**Per-category models**")
+        if single_models:
+            for m in single_models:
+                st.write(f"- `{m}`")
+        else:
+            st.caption("None")
+    with col_m:
+        st.markdown("**Multi-category models**")
+        if multi_models:
+            for m in multi_models:
+                st.write(f"- `{m}`")
+        else:
+            st.caption("None")
+else:
+    st.warning("No models registered.")
+
+st.markdown("---")
 
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -30,7 +53,7 @@ with col2:
         key="threshold"
     )
 with col3:
-    freq = st.selectbox("⚙️ Frequency", options=["Daily", "Weekly"], index=0)
+    freq = st.selectbox("Frequency", options=["Daily", "Weekly"], index=0)
 
 if st.button("▶ Run", type="primary", use_container_width=True):
 

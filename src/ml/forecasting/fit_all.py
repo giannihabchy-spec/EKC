@@ -18,6 +18,8 @@ def fit_all(branch_id: int, threshold: float = 0.1, freq: str = "D") -> pd.DataF
 
     filtered_series = {}
     for category, s in series.items():
+        if len(s) == 0:
+            continue
         near_zero_ratio = len(s[np.abs(s) < 10]) / len(s)
         if near_zero_ratio <= threshold:
             filtered_series[category] = s

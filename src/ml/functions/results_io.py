@@ -96,6 +96,8 @@ def save_results(data):
 
 
 def get_fitted(results):
+    if "final_wape" not in results.columns:
+        return {"categories": [], "models": [], "count": 0}
     fitted = results.dropna(subset=["final_wape"])
     categories = fitted["category"].unique().tolist()
     models = fitted["model"].unique().tolist()

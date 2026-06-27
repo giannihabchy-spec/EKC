@@ -109,9 +109,6 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             st.write(supa_result['msg'])
             supa_st.update(label="Updating Database", state="error", expanded=True)
             st.stop()
-        elif supa_result['status'] == 'no_data':
-            st.write(supa_result['msg'])
-            supa_st.update(label="Updating Database", state="complete", expanded=True)
         else:
             st.write(supa_result['msg'])
             conn = get_pg_connection()

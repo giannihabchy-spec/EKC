@@ -10,8 +10,8 @@ MODEL_REGISTRY = {
     # "xgb": fit_xgb,
     # "sarima": fit_sarima,
     # "nhits": fit_nhits,
-    # "tft": fit_tft,
-    "lgbm": fit_lgbm,
+    "tft": fit_tft,
+    # "lgbm": fit_lgbm,
 }
 
 MULTI_REGISTRY = {

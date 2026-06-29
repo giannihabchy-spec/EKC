@@ -5,25 +5,9 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import mean_absolute_error
-from ml.modeling import _split, _add_holiday_features
+from ml.modeling import _split, _make_covariates
 from ml.config import nhits_tuning
 
-
-# ── Covariates (calendar + holidays only, no lags/rolling stats) ─────────
-
-def _make_covariates(index: pd.DatetimeIndex, freq: str) -> pd.DataFrame:
-    df = pd.DataFrame(index=index)
-
-    if freq == "D":
-        df["day_of_week"] = index.dayofweek
-        df["day_of_month"] = index.day
-        df["is_weekend"] = (index.dayofweek >= 5).astype(int)
-
-    df["month"] = index.month
-    df["weekofyear"] = index.isocalendar().week.astype(int).values
-
-    df = _add_holiday_features(df, freq)
-    return df
 
 
 # ── Dataset ──────────────────────────────────────────────────────────────

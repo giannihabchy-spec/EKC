@@ -5,9 +5,9 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import mean_absolute_error
-from ml.modeling import _split, _add_holiday_features
+from ml.modeling import _split, _make_covariates
 from ml.config import tft_tuning
-from ml.forecasting.nhits import _make_covariates, WindowDataset, MultiWindowDataset
+from ml.forecasting.nhits import WindowDataset, MultiWindowDataset
 
 
 # ── TFT Components ─────────────────────────────────────────────────────

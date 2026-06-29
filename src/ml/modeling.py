@@ -243,6 +243,22 @@ def _make_features(s: pd.Series, freq: str = "D" ) -> pd.DataFrame:
     return df
 
 
+# ── Covariates (calendar + holidays only, no lags/rolling stats) ─────────
+def _make_covariates(index: pd.DatetimeIndex, freq: str) -> pd.DataFrame:
+    df = pd.DataFrame(index=index)
+
+    if freq == "D":
+        df["day_of_week"] = index.dayofweek
+        df["day_of_month"] = index.day
+        df["is_weekend"] = (index.dayofweek >= 5).astype(int)
+
+    df["month"] = index.month
+    df["weekofyear"] = index.isocalendar().week.astype(int).values
+
+    df = _add_holiday_features(df, freq)
+    return df
+
+
 def result_to_json(model_name: str, result: dict) -> str:
     data = {
         "model":          model_name,

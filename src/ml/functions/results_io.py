@@ -115,8 +115,8 @@ def results_to_df_dict(
 
     if not os.path.exists(RESULTS_DIR):
         return {
-            "forecasts": pd.DataFrame(columns=["branch_id", "category", "freq", "model", "date", "sales"]),
-            "test_pred": pd.DataFrame(columns=["branch_id", "category", "freq", "model", "date", "sales"]),
+            "forecasts": pd.DataFrame(columns=["branch_id", "category", "freq", "model", "date", "sales", "final_wape"]),
+            "test_pred": pd.DataFrame(columns=["branch_id", "category", "freq", "model", "date", "sales", "final_wape"]),
         }
 
     for model_name in os.listdir(RESULTS_DIR):
@@ -136,11 +136,15 @@ def results_to_df_dict(
                 data = json.load(f)
 
             for category, entry in data.items():
+                metrics = entry.get("metrics", {})
+                final_wape = metrics.get("final_wape")
+
                 base = {
                     "branch_id": branch_id,
                     "category": category,
                     "freq": freq,
                     "model": model_name,
+                    "final_wape": final_wape,
                 }
 
                 forecast = entry.get("forecast")
@@ -153,7 +157,7 @@ def results_to_df_dict(
                     for date, sales in zip(test_pred["dates"], test_pred["values"]):
                         test_pred_rows.append({**base, "date": date, "sales": sales})
 
-    cols = ["branch_id", "category", "freq", "model", "date", "sales"]
+    cols = ["branch_id", "category", "freq", "model", "date", "sales", "final_wape"]
     forecasts = pd.DataFrame(forecast_rows, columns=cols)
     test_pred = pd.DataFrame(test_pred_rows, columns=cols)
 

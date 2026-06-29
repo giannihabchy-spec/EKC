@@ -16,6 +16,7 @@ sheet_config = {
             'model',
             'date',
             'sales',
+            'final_wape',
         ],
 
         "unique_key": [
@@ -35,6 +36,7 @@ sheet_config = {
             'model',
             'freq',
             'sales',
+            'final_wape',
         ]
     },
 
@@ -48,6 +50,7 @@ sheet_config = {
             'model',
             'date',
             'sales',
+            'final_wape',
         ],
 
         "unique_key": [
@@ -67,6 +70,7 @@ sheet_config = {
             'model',
             'freq',
             'sales',
+            'final_wape',
         ]
     },
 }

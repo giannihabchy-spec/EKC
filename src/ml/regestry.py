@@ -18,5 +18,5 @@ MODEL_REGISTRY = {
 MULTI_REGISTRY = {
     # "nhits_multi": fit_single_nhits,
     # "tft_multi": fit_single_tft,
-    "xgb_multi": fit_single_xgb,
+    # "xgb_multi": fit_single_xgb,
 }

@@ -99,74 +99,74 @@ def find_existing_data(conn, sheet, sheet_config, branch_id):
         }
     
 
-# def delete_existing_data(conn, sheet, sheet_config, branch_id):
-#     conn.rollback()
+def delete_existing_data(conn, sheet, sheet_config, branch_id):
+    conn.rollback()
 
-#     sht, data = next(iter(sheet.items()))
+    sht, data = next(iter(sheet.items()))
 
-#     # data = make_columns_date(data, ["report_date"])
+    # data = make_columns_date(data, ["report_date"])
 
-#     config = sheet_config.get(sht)
-#     if config is None:
-#         raise KeyError(
-#             f"No config found for sheet '{sht}'. "
-#             f"Available configs: {list(sheet_config.keys())}"
-#         )
+    config = sheet_config.get(sht)
+    if config is None:
+        raise KeyError(
+            f"No config found for sheet '{sht}'. "
+            f"Available configs: {list(sheet_config.keys())}"
+        )
 
-#     table = config["target_table"]
-#     table_name = safe_ident(table)
+    table = config["target_table"]
+    table_name = safe_ident(table)
 
-#     dates = data["report_date"].drop_duplicates()
-#     deleted_rows = []
+    dates = data["report_date"].drop_duplicates()
+    deleted_rows = []
 
-#     try:
-#         for date in dates:
-#             year = date.year
-#             month = date.month
+    try:
+        for date in dates:
+            year = date.year
+            month = date.month
 
-#             start_date = date.replace(day=1)
+            start_date = date.replace(day=1)
 
-#             if month == 12:
-#                 end_date = date.replace(year=year + 1, month=1, day=1)
-#             else:
-#                 end_date = date.replace(month=month + 1, day=1)
+            if month == 12:
+                end_date = date.replace(year=year + 1, month=1, day=1)
+            else:
+                end_date = date.replace(month=month + 1, day=1)
 
-#             with conn.cursor() as cur:
-#                 cur.execute(
-#                     f"""
-#                     DELETE FROM {table_name}
-#                     WHERE branch_id = %s
-#                       AND report_date >= %s
-#                       AND report_date < %s
-#                       AND old_data = 1
-#                     """,
-#                     (branch_id, start_date, end_date)
-#                 )
+            with conn.cursor() as cur:
+                cur.execute(
+                    f"""
+                    DELETE FROM {table_name}
+                    WHERE branch_id = %s
+                      AND report_date >= %s
+                      AND report_date < %s
+                      AND old_data = 1
+                    """,
+                    (branch_id, start_date, end_date)
+                )
 
-#                 if cur.rowcount > 0:
-#                     deleted_rows.append(
-#                         f"{month}/{year} → {cur.rowcount} row(s) deleted"
-#                     )
+                if cur.rowcount > 0:
+                    deleted_rows.append(
+                        f"{month}/{year} → {cur.rowcount} row(s) deleted"
+                    )
 
-#         conn.commit()
+        conn.commit()
 
-#     except Exception as e:
-#         conn.rollback()
-#         return {
-#             "status": "error",
-#             "msg": f"Delete failed: {e}"
-#         }
+    except Exception as e:
+        conn.rollback()
+        return {
+            "status": "error",
+            "msg": f"Delete failed: {e}"
+        }
 
-#     if deleted_rows:
-#         return {
-#             "status": "ok",
-#             "msg": "Deleted existing data from:  \n" + "  \n".join(deleted_rows)
-#         }
+    if deleted_rows:
+        return {
+            "status": "ok",
+            "msg": "Deleted existing data from:  \n" + "  \n".join(deleted_rows)
+        }
 
-#     return {
-#         "status": "warning",
-#         "msg": "Existing data is not old"
-#     }
+    return {
+        "status": "warning",
+        "msg": "Existing data is not old"
+    }
 
 
 def describe_series(series: dict[str, pd.Series]) -> pd.DataFrame:

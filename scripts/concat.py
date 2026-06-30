@@ -136,7 +136,7 @@ if st.button("▶ Run", type="primary", use_container_width=True):
                 st.stop()
             st.write(date_val['msg'])
 
-            validating_st.update(label="Formatting Data", state="complete", expanded=True)
+            validating_st.update(label="Validating", state="complete", expanded=True)
 
 
         with st.status("Formatitng...", expanded=True) as form_st:

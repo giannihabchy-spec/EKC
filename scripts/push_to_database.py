@@ -39,6 +39,10 @@ if "ptdb_supabase_client" not in st.session_state:
     st.session_state.ptdb_supabase_client = init_supabase()
 supabase = st.session_state.ptdb_supabase_client
 
+
+st.title("Push to Database")
+st.markdown("---")
+
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     uploaded_file = st.file_uploader("Upload Excel Report", type=["xlsx"], key="ptdb_upload")

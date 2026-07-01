@@ -7,11 +7,11 @@ from ml.forecasting.lgbm import fit_lgbm
 from ml.forecasting.xgb_multi import fit_single_xgb
 
 MODEL_REGISTRY = {
+    # "sarima": fit_sarima,
     "rf":  fit_rf,
     "xgb": fit_xgb,
-    # "sarima": fit_sarima,
-    # "nhits": fit_nhits,
-    # "tft": fit_tft,
+    "nhits": fit_nhits,
+    "tft": fit_tft,
     "lgbm": fit_lgbm,
 }
 

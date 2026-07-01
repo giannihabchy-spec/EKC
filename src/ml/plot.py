@@ -96,3 +96,26 @@ def plot_best(branch_id: int, freq: str, figsize: tuple = (16, 5)) -> None:
     all_results = _load_all_results(branch_id, freq)
     best = _pick_best(all_results)
     _plot(series, best, figsize)
+
+
+def plot_by_category(branch_id: int, category: str, freq: str, figsize: tuple = (16, 5)) -> None:
+    """
+    Plot all available models for a single category of a branch.
+    One plot per model, stacked vertically.
+    """
+    data    = load_daily_sales(branch_id)
+    series  = get_series(data, "category", freq)
+
+    if category not in series:
+        print(f"Category '{category}' not found for branch {branch_id}.")
+        return
+
+    all_results = _load_all_results(branch_id, freq)
+
+    if category not in all_results:
+        print(f"No results found for category '{category}'.")
+        return
+
+    for model_name, result in all_results[category]:
+        result.setdefault("model", model_name)
+        _plot({category: series[category]}, {category: result}, figsize)

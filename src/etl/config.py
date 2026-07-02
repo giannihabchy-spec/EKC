@@ -23,7 +23,7 @@ JOBS_CLOUD = [
 
     { # disc_by_desc__sales_by_item -> Discount #### ----------
     "key": "final_discount",
-    "df_cols": ['description', 'qty', 'discount_percentage'],
+    "df_cols": ['description', 'qty', 'discount percentage'],
     "sheet": "Discount",
     "start_row": 2,
     },

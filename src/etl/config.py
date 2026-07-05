@@ -22,7 +22,7 @@ JOBS_CLOUD = [
     },
 
     { # disc_by_desc__sales_by_item -> Discount #### ----------
-    "key": "final_discount",
+    "key": "final discount",
     "df_cols": ['description', 'qty', 'discount percentage'],
     "sheet": "Discount",
     "start_row": 2,
@@ -249,7 +249,7 @@ no_nulls = {
 
 def get_jobs(source: str) -> list[dict]:
     if source == "cloud":
-        return JOBS_CLOUD
+        return list(JOBS_CLOUD)
     if source == "local":
-        return JOBS_LOCAL
+        return list(JOBS_LOCAL)
     raise ValueError(f"Unknown source: {source!r}. Use 'cloud' or 'local'.")

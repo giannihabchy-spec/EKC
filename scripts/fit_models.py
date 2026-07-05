@@ -1,7 +1,7 @@
 from ml.forecasting.fit_all import fit_all
 from ml.functions.eval import display_results
 from ml.functions.results_io import delete_existing_results, save_results, results_to_df_dict, get_fitted
-from ml.regestry import MODEL_REGISTRY, MULTI_REGISTRY
+from ml.regestry import MODEL_REGISTRY
 from ml.validators import update_supa_results
 from ml.config import sheet_config
 import streamlit as st
@@ -11,32 +11,19 @@ from supa.loaders import push_sheets
 
 
 st.set_page_config(
-    page_title="Fit Models",
+    page_title="Forecast Sales",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-st.title("Fit Models")
+st.title("Forecast Sales")
 st.markdown("---")
 
 single_models = list(MODEL_REGISTRY.keys())
-multi_models = list(MULTI_REGISTRY.keys())
 
-if single_models or multi_models:
-    col_s, col_m = st.columns(2)
-    with col_s:
-        st.markdown("**Per-category models**")
-        if single_models:
-            for m in single_models:
-                st.write(f"- `{m}`")
-        else:
-            st.caption("None")
-    with col_m:
-        st.markdown("**Multi-category models**")
-        if multi_models:
-            for m in multi_models:
-                st.write(f"- `{m}`")
-        else:
-            st.caption("None")
+st.markdown("**Registered models**")
+if single_models:
+    for m in single_models:
+        st.write(f"- `{m}`")
 else:
     st.warning("No models registered.")
 

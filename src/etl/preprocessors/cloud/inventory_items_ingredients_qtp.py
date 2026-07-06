@@ -1,14 +1,30 @@
-from etl.utils import read
-from etl.utils import keep_cols_by_index
-from etl.utils import drop_na_by_name
-from etl.utils import remove_repeated_headers
-from etl.utils import make_columns_numeric
+from etl.utils import (
+    read,
+    keep_cols_by_index,
+    drop_na_by_name,
+    remove_repeated_headers,
+    make_columns_numeric,
+    drop_rows
+)
 
 
 def preprocess(path):
     data = read(path)
-    data = keep_cols_by_index(data,[1,2,4])
-    data.columns = ['Name', 'Product Description', 'Qty']
+    data = keep_cols_by_index(data,[0,1,2,4])
+    data.columns = ['Code', 'Name', 'Product Description', 'Qty']
+    data = drop_rows(data, 'code', value = 'Product Code')
+    data = drop_rows(data, 'code', date = True)
+    cat_mask = (
+        data['Qty'].isna()
+        & data['Qty'].shift(-1).isna()
+        & data['Qty'].shift(-2).isna()
+    )
+    cat_ids = data.loc[cat_mask].index
+    data.loc[cat_ids, 'Category'] = data.loc[cat_ids, 'Code']
+    data['Category'] = data['Category'].ffill()
+    group_ids = data[data['Qty'].isna()].index
+    data.loc[group_ids, 'Group'] = data.loc[group_ids, 'Code']
+    data['Group'] = data['Group'].ffill()
     ids = data[data['Name'].notna()].index
     data.loc[ids,'Qty'] = data.loc[ids,'Qty'].str.replace('Ingredients to prepare ','',regex=False)
     data.loc[ids,'Production Name'] = data.loc[ids,'Qty'].str.split().apply(lambda x: ' '.join(x[3:]))
@@ -17,10 +33,9 @@ def preprocess(path):
     data.loc[ids,'Qty to be Prepared'] = data.loc[ids,'to prepare'].apply(lambda x: x[0])
     data.loc[ids,'Prepared Unit'] = data.loc[ids,'to prepare'].apply(lambda x: x[1])
     data[['Qty to be Prepared','Prepared Unit']] = data[['Qty to be Prepared','Prepared Unit']].ffill()
-    data = remove_repeated_headers(data,'Qty')
     data = drop_na_by_name(data,['Product Description','Qty'])
     data = make_columns_numeric(data,['Qty','Qty to be Prepared'])
-    cols = ['Production Name', 'Product Description', 'Qty','Qty to be Prepared', 'Prepared Unit']
+    cols = ['Category', 'Group', 'Production Name', 'Product Description', 'Qty','Qty to be Prepared', 'Prepared Unit']
     data = data[cols].copy()
-    data.columns = ['production name', 'product description', 'qty','qty to prepared', 'prepared unit']
+    data.columns = ['category', 'group', 'production name', 'product description', 'qty','qty to prepared', 'prepared unit']
     return data

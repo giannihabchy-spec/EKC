@@ -113,10 +113,15 @@ def results_to_df_dict(
     forecast_rows = []
     test_pred_rows = []
 
+    empty_cols = [
+        "branch_id", "category", "freq", "model", "date", "sales",
+        "final_wape", "val_wape", "final_mae", "final_rmse", "average_sales",
+    ]
+
     if not os.path.exists(RESULTS_DIR):
         return {
-            "forecasts": pd.DataFrame(columns=["branch_id", "category", "freq", "model", "date", "sales", "final_wape"]),
-            "test_pred": pd.DataFrame(columns=["branch_id", "category", "freq", "model", "date", "sales", "final_wape"]),
+            "forecasts": pd.DataFrame(columns=empty_cols),
+            "test_pred": pd.DataFrame(columns=empty_cols),
         }
 
     for model_name in os.listdir(RESULTS_DIR):
@@ -137,27 +142,34 @@ def results_to_df_dict(
 
             for category, entry in data.items():
                 metrics = entry.get("metrics", {})
-                final_wape = metrics.get("final_wape")
 
                 base = {
                     "branch_id": branch_id,
                     "category": category,
                     "freq": freq,
                     "model": model_name,
-                    "final_wape": final_wape,
+                    "final_wape": metrics.get("final_wape"),
+                    "val_wape": metrics.get("val_wape"),
+                    "final_mae": metrics.get("final_mae"),
+                    "final_rmse": metrics.get("final_rmse"),
                 }
 
                 forecast = entry.get("forecast")
                 if forecast and "dates" in forecast and "values" in forecast:
+                    avg_sales = sum(forecast["values"]) / len(forecast["values"]) if forecast["values"] else None
                     for date, sales in zip(forecast["dates"], forecast["values"]):
-                        forecast_rows.append({**base, "date": date, "sales": sales})
+                        forecast_rows.append({**base, "date": date, "sales": sales, "average_sales": avg_sales})
 
                 test_pred = entry.get("test_pred")
                 if test_pred and "dates" in test_pred and "values" in test_pred:
+                    avg_sales = sum(test_pred["values"]) / len(test_pred["values"]) if test_pred["values"] else None
                     for date, sales in zip(test_pred["dates"], test_pred["values"]):
-                        test_pred_rows.append({**base, "date": date, "sales": sales})
+                        test_pred_rows.append({**base, "date": date, "sales": sales, "average_sales": avg_sales})
 
-    cols = ["branch_id", "category", "freq", "model", "date", "sales", "final_wape"]
+    cols = [
+        "branch_id", "category", "freq", "model", "date", "sales",
+        "final_wape", "val_wape", "final_mae", "final_rmse", "average_sales",
+    ]
     forecasts = pd.DataFrame(forecast_rows, columns=cols)
     test_pred = pd.DataFrame(test_pred_rows, columns=cols)
 

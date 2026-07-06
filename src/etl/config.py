@@ -93,14 +93,14 @@ JOBS_CLOUD = [
 
     { # sales items ingredients -> Recipes ####----------
     "key": "sales items ingredients",
-    "df_cols": ['menu items','product description','qty'],
+    "df_cols": ['category', 'group', 'menu items','product description','qty'],
     "sheet": "Recipes",
     "start_row": 2,
     },
 
     { # inventory items ingredients -> sub recipes ####----------
     "key": "inventory items ingredients",
-    "df_cols": ['production name', 'product description', 'qty','qty to prepared', 'prepared unit'],
+    "df_cols": ['category', 'group', 'production name', 'product description', 'qty','qty to prepared', 'prepared unit'],
     "sheet": "sub recipes",
     "start_row": 2,
     }

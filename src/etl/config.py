@@ -100,7 +100,7 @@ JOBS_CLOUD = [
 
     { # inventory items ingredients -> sub recipes ####----------
     "key": "inventory items ingredients",
-    "df_cols": ['category', 'group', 'production name', 'product description', 'qty','qty to prepared', 'prepared unit'],
+    "df_cols": ['production name', 'product description', 'qty','qty to prepared', 'prepared unit'],
     "sheet": "sub recipes",
     "start_row": 2,
     }

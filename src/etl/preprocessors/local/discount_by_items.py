@@ -13,4 +13,5 @@ def preprocess(path):
     data = clean_check(data,['Check'])
     data = make_columns_numeric(data,['QTY','item_amount'])
     data.columns = ['check', 'description', 'qty', 'item amount']
+    data['discount percentage'] = 1
     return data

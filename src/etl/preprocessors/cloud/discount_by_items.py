@@ -15,5 +15,5 @@ def preprocess(path):
     data = drop_na_by_name(data,['qty'])
     data = data.reset_index(drop = True)
     data = make_columns_numeric(data,['item amount'])
-    # data['discount percentage'] = 1
+    data['discount percentage'] = 1
     return data

@@ -16,8 +16,14 @@ def preprocess(path):
     data = drop_rows(data, 'code', 'Total by price level :')
     data = drop_rows(data, 'code', date = True)
     data = data.reset_index(drop= True)
-    items_ids = data[data['code'] == 'Price Level 1'].index - 1 
-    data['menu items'] = data.loc[items_ids, 'code']
+
+    items_ids = data[data['code'] == 'Price Level 1'].index - 1
+    for i in items_ids:
+        if data.loc[i,'code'] == 'Product Code':
+            data.loc[i,'menu items'] = data.loc[i-1,'code']
+        else:
+            data.loc[i,'menu items'] = data.loc[i,'code']
+
     data['menu items'] = data['menu items'].ffill()
     data = drop_rows(data, 'code', value = 'Price Level 1')
     data = data.reset_index(drop=True)

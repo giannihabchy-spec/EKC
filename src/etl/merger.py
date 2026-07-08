@@ -38,6 +38,16 @@ def merge_disc(cleaned: dict) -> dict:
             how = 'left'
         )
 
+    final_inv = cleaned.get('discount by invoice with percentage')
+    item = cleaned.get('discount by items')
+
+    if final_inv is not None and item is not None:
+        cols = ['check', 'description', 'qty', 'discount percentage']
+        cleaned['final discount'] = pd.concat([
+            item[cols],
+            final_inv[cols]
+        ])
+
     return cleaned
 
 

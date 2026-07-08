@@ -10,8 +10,8 @@ from etl.utils import (
 
 def preprocess(path):
     data = read(path)
-    data = keep_cols_by_index(data,[0,1,2,4])
-    data.columns = ['Code', 'Name', 'Product Description', 'Qty']
+    data = keep_cols_by_index(data,[0,1,2,4,5])
+    data.columns = ['Code', 'Name', 'Product Description', 'Qty', 'Unit']
     data = drop_rows(data, 'code', value = 'Product Code')
     data = drop_rows(data, 'code', date = True)
     cat_mask = (
@@ -35,7 +35,7 @@ def preprocess(path):
     data[['Qty to be Prepared','Prepared Unit']] = data[['Qty to be Prepared','Prepared Unit']].ffill()
     data = drop_na_by_name(data,['Product Description','Qty'])
     data = make_columns_numeric(data,['Qty','Qty to be Prepared'])
-    cols = ['Category', 'Group', 'Production Name', 'Product Description', 'Qty','Qty to be Prepared', 'Prepared Unit']
+    cols = ['Category', 'Group', 'Production Name', 'Product Description', 'Qty', 'Unit','Qty to be Prepared', 'Prepared Unit']
     data = data[cols].copy()
-    data.columns = ['category', 'group', 'production name', 'product description', 'qty','qty to prepared', 'prepared unit']
+    data.columns = ['category', 'group', 'production name', 'product description', 'qty', 'unit','qty to prepared', 'prepared unit']
     return data

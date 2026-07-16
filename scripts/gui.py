@@ -96,10 +96,10 @@ if st.button("▶ Run Pipeline", type="primary", use_container_width=True):
                 status_clean.update(label='Empty folder',state="error", expanded=True)
                 st.stop()
 
-            cleaned = merge_ib(cleaned)
-            cleaned = merge_disc(cleaned)
             cleaned = strip_all(cleaned)
             cleaned = special_char(cleaned)
+            cleaned = merge_ib(cleaned)
+            cleaned = merge_disc(cleaned)
             save_cleaned_data(cleaned, base_folder)
             st.write("Cleaned data is saved.")
             status_clean.update(label="Cleaning", state="complete", expanded=True)

@@ -1,43 +1,30 @@
-# All Branches
-
 import pandas as pd
-from etl.utils import read
-from etl.utils import keep_cols_by_index
-from etl.utils import remove_repeated_headers
-from etl.utils import drop_rows
-from etl.utils import drop_na_by_name
-from etl.utils import make_columns_numeric
+import numpy as np
+from etl.utils import (
+    read,
+    keep_cols_by_index,
+    drop_na_by_name,
+    make_columns_numeric
+)
 
 
 def preprocess(path):
     data = read(path)
-    data = keep_cols_by_index(data,[0,1,4])
-    data.columns = ['ID','Description','Price']
-    data = drop_rows(data,'ID','Item ID')
-    data = drop_rows(data,'ID',date=True)
-    data = remove_repeated_headers(data,'Description')
-    data = data.reset_index(drop=True)
-    data.loc[6:,'ID'] = data.loc[6:,'ID'].shift(-1)
-    data = drop_na_by_name(data,['ID'])
-
+    data = keep_cols_by_index(data, [0,1,5])
+    data.columns = ['group', 'menu items', 'sp exc vat']
+    ids = data.loc[data['group'] == 'Item ID'].index
+    remove_ids = ids.union(ids-1).union(ids-2).union(ids-3)
+    data = data.drop(index= remove_ids).reset_index(drop=True)
     mask = (
-        data['Description'].isna() &
-        data['Description'].shift(-1).isna() &
-        data['Description'].shift(-2).isna()
-        )
-    data.loc[mask,'Category'] = data.loc[mask,'ID']
-    data['Category'] = data['Category'].ffill()
-
-    is_nan = data['Description'].isna()
-    end = is_nan & ~is_nan.shift(-1, fill_value=False)
-    ids = data.loc[end].index
-    data.loc[ids,'Group'] = data.loc[ids,'ID']
-    data['Group'] = data['Group'].ffill()
-    data = drop_na_by_name(data,['Description'])
-    data = make_columns_numeric(data,['Price'])
-
-    cols = ['Category', 'Group', 'Description', 'Price']
+        data['menu items'].isna() &
+        data['menu items'].shift(-1).isna() & 
+        data['menu items'].shift(-2).isna()
+    )
+    data.loc[mask, 'category'] = data.loc[mask, 'group']
+    data.loc[data['menu items'].notna(), ['group']] = np.nan
+    data[['group', 'category']] = data[['group', 'category']].ffill()
+    data = drop_na_by_name(data, ['menu items'])
+    cols = ['category', 'group', 'menu items', 'sp exc vat']
     data = data[cols]
-    data.columns = ['category', 'group', 'menu items', 'sp exc vat']
-
+    data = make_columns_numeric(data, ['sp exc vat'])
     return data

@@ -55,13 +55,12 @@ def compare(
     omega = preprocess(matched_file)
     autocalc = pd.read_excel(autocalc_path)
 
-    cols = ['Item', 'Ingredient', 'Qty']
+    cols = ['menu items', 'product description', 'qty']
+    omega = omega[cols]
+    omega.columns = ['Item', 'Ingredient', 'Qty']
 
-    omega = keep_cols_by_index(omega,[0,1,2])
-    omega.columns = cols
-
-    autocalc = keep_cols_by_index(autocalc,[0,1,2])
-    autocalc.columns = cols
+    # autocalc = keep_cols_by_index(autocalc,[0,1,2])
+    autocalc.columns = ['Item', 'Ingredient', 'Qty']
 
     items_autocalc = set(autocalc['Item'])
     items_omega = set(omega['Item'])

@@ -60,6 +60,7 @@ multiple_allowed = {
     'REP_I_0087_IB.xlsx', # req sum ib (cloud)
     'REP_I_0044.xlsx', # prog sum inv (cloud)
     'rep_i_0044.xls', # prog sum inv (local)
+    'REP_S_00178.xlsx', # prog sum sales (cloud)
 }
 
 def _base_filename(filename: str) -> str:

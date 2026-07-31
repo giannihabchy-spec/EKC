@@ -9,7 +9,7 @@ from etl.utils import (
 
 def preprocess(path):
     data = read(path)
-    data = keep_cols_by_index(data, [0, 1, 2, 3, 4, 5, 7, 10])
+    data = keep_cols_by_index(data, [0, 1, 3, 4, 5, 6, 8, 11])
     data.columns = ['Product Code','Product Description','Pur Unit','Qty Pur','Inv Unit','Qty I F','Unit','Avg Cost']
     data = data.iloc[4:,].copy()
     data['Category'] = data.iloc[0,0]

@@ -13,7 +13,7 @@ def preprocess(path):
     data = keep_cols_by_index(data, [0,1,5])
     data.columns = ['group', 'menu items', 'sp exc vat']
     # data['id'] = data['group']
-    ids = data.loc[data['group'] == 'Item ID'].index
+    ids = data.loc[data['group'] == 'ID'].index
     remove_ids = ids.union(ids-1).union(ids-2).union(ids-3)
     data = data.drop(index= remove_ids).reset_index(drop=True)
     mask = (

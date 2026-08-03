@@ -45,9 +45,17 @@ def merge_disc(cleaned: dict) -> dict:
 
     elif items is None and desc is not None and invoice is not None:
 
-        dups = desc.loc[desc['check'].duplicated()]
-        if not dups.empty:
-            raise ValueError("duplicates in file 'discount by description' and discount by items not available.")
+        # dups = desc.loc[desc['check'].duplicated()]
+        # if not dups.empty:
+        #     raise ValueError("duplicates in file 'discount by description' and discount by items not available.")
+
+        desc = desc.groupby('check', as_index= False).agg(
+            {
+                'discount': 'sum',
+                'amount': 'first',
+                'discount percentage': 'sum'
+            }
+        )
         
         cleaned['final discount'] = invoice.merge(
             desc[['check', 'discount percentage']],

@@ -178,3 +178,6 @@ def push_sheets(sheets: dict, sheet_config: dict, conn, ingnore_missing_cols: bo
             ),
             "details": {"loaded": loaded, "empty": empty_sheets, "error": str(e)},
         }
+
+
+# def load_logs(data_coverage):

@@ -61,7 +61,6 @@ multiple_allowed = {
     'REP_I_0044.xlsx', # prog sum inv (cloud)
     'rep_i_0044.xls', # prog sum inv (local)
     'REP_S_00178.xlsx', # prog sum sales (cloud)
-    'rep_s_00191_rows.xlsx',
 }
 
 def _base_filename(filename: str) -> str:
@@ -133,6 +132,8 @@ def clean_folder(
         try:
             result = (
                 cleaner(str(p), omega_loc=True)
+                if quick_variance
+                else cleaner(str(p))
             )
 
             cleaned[output_name] = result

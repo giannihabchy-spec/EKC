@@ -11,7 +11,12 @@ st.set_page_config(
 _ensure_supa_env_from_secrets()
 
 from supa.config import SHEET_CONFIG
-from supa.db import get_pg_connection, init_supabase, get_branch_id
+from supa.db import (
+    get_pg_connection,
+    init_supabase,
+    get_branch_id,
+    check_data_coverage
+)
 from supa.loaders import extract_sheets_and_client, push_sheets
 from supa.streamlit_functions import get_client_list, get_period_options
 from supa.modeling import (
@@ -49,11 +54,12 @@ with col1:
 with col2:
     client_options = get_client_list(supabase)
     selected_client = st.selectbox("Select Branch", options=client_options, key="ptdb_client")
+    branch_id = get_branch_id(selected_client)['branch_id']
 with col3:
     period_options = get_period_options()
     selected_period = st.selectbox("Select Reporting Period", options=period_options, key="ptdb_period")
 with col4:
-    data_coverage = st.multiselect('Select Data to Load', options=[1,2,3,4,5], default=[],key="ptdb_data")
+    data_coverage = st.multiselect('Select Data to Load', options = check_data_coverage(branch_id, selected_client, selected_period), default=[],key="ptdb_data")
 
 
 if st.button("▶ Run", type="primary", use_container_width=True):

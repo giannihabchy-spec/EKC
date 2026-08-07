@@ -253,3 +253,109 @@ def get_branch_id_from_omega_name(omega_client):
             "status": "ok",
             "branch_id": rows[0]["id"]
         }
+
+
+def check_data_coverage(branch_id, selected_client, selected_period):
+    conn = get_pg_connection()
+
+    try:
+        date = pd.to_datetime(selected_period)
+
+        # Waste
+        first_day = date.to_period("M").start_time
+        last_day = (date.to_period("M") + 1).start_time
+        waste_query = """
+        SELECT count(*)
+        FROM waste_logs
+        WHERE outlet = %s
+        AND date >= %s
+        AND date < %s
+        """
+        waste = pd.read_sql(
+            waste_query, 
+            conn, 
+            params = (selected_client, first_day, last_day))
+
+
+        # Inventory
+        first_day = date.to_period("M").end_time - pd.Timedelta(days=3)
+        last_day = (date.to_period("M") + 1).start_time + pd.Timedelta(days=4)
+        inv_query = """
+        SELECT count(*)
+        FROM inventory_logs
+        WHERE outlet = %s
+        AND date >= %s
+        AND date < %s
+        """
+        inventory = pd.read_sql(
+            inv_query,
+            conn,
+            params=(selected_client, first_day, last_day)
+        )
+
+
+        # Transfers
+        first_day = date.to_period("M").start_time
+        last_day = (date.to_period("M") + 1).start_time
+        transfers_query = """
+        SELECT count(*)
+        FROM transfers
+        WHERE date::timestamp >= %s
+        AND date::timestamp < %s
+        AND (
+            from_outlet = %s
+            OR to_outlet = %s
+        )
+        """
+        transfers = pd.read_sql(
+            transfers_query,
+            conn,
+            params=(first_day, last_day, selected_client, selected_client)
+        )
+
+
+        # Production
+        first_day = date.to_period("M").start_time
+        last_day = (date.to_period("M") + 1).start_time
+        prod_query = """
+        SELECT count(*)
+        FROM production_log
+        WHERE log_date >= %s
+        AND log_date < %s
+        AND branch_id = %s
+        """
+
+        production = pd.read_sql(
+            prod_query,
+            conn,
+            params=(first_day, last_day, branch_id)
+        )
+
+        # Purchase    
+        first_day = date.to_period("M").start_time
+        last_day = (date.to_period("M") + 1).start_time
+        query = """
+        SELECT count(*)
+        FROM purchase_logs
+        WHERE outlet = %s
+        AND invoice_date >= %s
+        AND invoice_date < %s
+        """
+        purchase = pd.read_sql(
+            query,
+            conn,
+            params=(selected_client, first_day, last_day)
+        )
+
+    finally:
+        conn.close()
+
+    data = {
+        'waste': int(waste.iloc[0,0]),
+        'inventory': int(inventory.iloc[0,0]),
+        'transfers': int(transfers.iloc[0,0]),
+        'production': int(production.iloc[0,0]),
+        'purchase': int(purchase.iloc[0,0]),
+    }
+
+    return [f'{k}: {v} rows' for k, v in data.items() if v != 0]

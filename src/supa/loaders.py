@@ -3,6 +3,7 @@ from supa.modeling import normalize_column_name, clean_value
 import numpy as np
 from psycopg2.extras import execute_values
 from psycopg2 import sql as psql
+from supa.db import get_pg_connection
 
 
 def load_sheet(file, sheet_name):
@@ -180,4 +181,122 @@ def push_sheets(sheets: dict, sheet_config: dict, conn, ingnore_missing_cols: bo
         }
 
 
-# def load_logs(data_coverage):
+def load_logs(branch_id, selected_client, selected_period, data_choice):
+    data = {}
+
+    table_mapping = {
+        'waste:': 'waste_logs',
+        'inventory:': 'inventory_logs',
+        'transfers:': 'transfers',
+        'production:': 'production_log',
+        'purchase:': 'purchase_logs'
+    }
+
+    date = pd.to_datetime(selected_period)
+    conn = get_pg_connection()
+
+    try:
+
+        if 'waste' in data_choice:
+
+            first_day = date.to_period("M").start_time
+            last_day = (date.to_period("M") + 1).start_time
+            waste_query = """
+            SELECT item_name, qty, remarks, date, item_type, location
+            FROM waste_logs
+            WHERE outlet = %s
+            AND date >= %s
+            AND date < %s
+            """
+            waste_df = pd.read_sql(
+                waste_query, 
+                conn, 
+                params = (selected_client, first_day, last_day))
+            waste_df.columns = ['product description', 'qty', 'original remarks', 'date', 'item type', 'location']
+
+            data['waste_sales'] = waste_df.loc[waste_df['item type'] == 'Menu Items']
+            data['waste_inventory'] = waste_df.loc[waste_df['item type'] == 'Inventory']
+
+
+        if 'inventory' in data_choice:
+
+            first_day = date.to_period("M").end_time - pd.Timedelta(days=3)
+            last_day = (date.to_period("M") + 1).start_time + pd.Timedelta(days=4)
+            inv_query = """
+            SELECT item_name, quantity, location
+            FROM inventory_logs
+            WHERE outlet = %s
+            AND date >= %s
+            AND date < %s
+            """
+            inventory = pd.read_sql(
+                inv_query,
+                conn,
+                params=(selected_client, first_day, last_day)
+            )
+            inventory.columns = ['product description', 'qty', 'location']
+
+            data['inventory'] = inventory
+
+
+        if 'production' in data_choice: 
+            first_day = date.to_period("M").start_time
+            last_day = (date.to_period("M") + 1).start_time
+            prod_query = """
+            SELECT production_name, actual_yield_qty, location
+            FROM production_log
+            WHERE log_date >= %s
+            AND log_date < %s
+            AND branch_id = %s
+            """
+            production = pd.read_sql(
+                prod_query,
+                conn,
+                params=(first_day, last_day, branch_id)
+            )
+            production.columns = ['production list', 'qty', 'location']
+
+            data['production'] = production
+
+
+        # if 'transfers' in data_choice:
+
+        #     first_day = date.to_period("M").start_time
+        #     last_day = (date.to_period("M") + 1).start_time
+        #     transfers_query = """
+        #     SELECT count(*)
+        #     FROM transfers
+        #     WHERE date::timestamp >= %s
+        #     AND date::timestamp < %s
+        #     AND (
+        #         from_outlet = %s
+        #         OR to_outlet = %s
+        #     )
+        #     """
+        #     transfers = pd.read_sql(
+        #         transfers_query,
+        #         conn,
+        #         params=(first_day, last_day, selected_client, selected_client)
+        #     )
+
+
+        # if 'purchase' in data_choice:
+        #     first_day = date.to_period("M").start_time
+        #     last_day = (date.to_period("M") + 1).start_time
+        #     query = """
+        #     SELECT item_name, base_qty, sub_total
+        #     FROM purchase_logs
+        #     WHERE outlet = %s
+        #     AND invoice_date >= %s
+        #     AND invoice_date < %s
+        #     """
+        #     purchase = pd.read_sql(
+        #         query,
+        #         conn,
+        #         params=(selected_client, first_day, last_day)
+        #     )
+
+    finally:
+        conn.close()
+
+    return {k:df for k,df in data.items() if not df.empty}

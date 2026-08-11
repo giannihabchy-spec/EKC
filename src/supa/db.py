@@ -358,4 +358,10 @@ def check_data_coverage(branch_id, selected_client, selected_period):
         'purchase': int(purchase.iloc[0,0]),
     }
 
-    return [f'{k}: {v} rows' for k, v in data.items() if v != 0]
+    return {
+        'result': [k for k, v in data.items() if v != 0],
+        'msg': [f'{k}: {v} rows' for k, v in data.items() if v != 0],
+        'branch_id': branch_id,
+        'selected_client': selected_client,
+        'selected_period': selected_period
+    }

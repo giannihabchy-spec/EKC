@@ -6,8 +6,8 @@ from supa.db import get_pg_connection
 
 def validate_client_name(real_client, entered_client):
 
-    real_client_clean = str(real_client).strip() if real_client is not None else ""
-    entered_client_clean = str(entered_client).strip() if entered_client is not None else ""
+    real_client_clean = str(real_client).strip().lower() if real_client is not None else ""
+    entered_client_clean = str(entered_client).strip().lower() if entered_client is not None else ""
 
     if real_client_clean == entered_client_clean:
         msg = "Client name matches the file."
@@ -486,4 +486,25 @@ def validate_currency_rate(branch_id, file_cur, file_rate):
     return {
         'status': 'ok',
         'msg': None
+    }
+
+
+def validate_selected_date(file_date, selected_date): # for loading logs from database
+
+    file_date = pd.to_datetime(file_date)
+    selected_date = pd.to_datetime(selected_date)
+
+
+    if (selected_date.month == file_date.month and selected_date.year == file_date.year):
+        return {
+            'status': 'ok',
+            'msg': 'Date Confirmed'
+        }
+
+    file_date_disp = f"{file_date.year}-{file_date.month}"
+    selected_date_disp = f"{selected_date.year}-{selected_date.month}"
+
+    return {
+        'status': 'error',
+        'msg': f"File date '{file_date_disp}' does not match the date selected '{selected_date_disp}'"
     }

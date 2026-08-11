@@ -10,6 +10,10 @@ st.set_page_config(
 
 _ensure_supa_env_from_secrets()
 
+from etl.special_characters import special_char
+from etl.strip_all import strip_all
+from etl.saver import save_cleaned_data
+
 from supa.config import SHEET_CONFIG
 from supa.db import (
     get_pg_connection,
@@ -18,7 +22,7 @@ from supa.db import (
     check_data_coverage
 )
 from supa.loaders import(
-    extract_sheets_and_client,
+    extract_info,
     push_sheets,
     load_logs,
 )
@@ -35,7 +39,7 @@ from supa.modeling import (
 from supa.validators import (
     validate_required_columns,
     validate_client_name,
-    validate_report_period,
+    validate_selected_date,
     find_existing_data,
     delete_existing_data,
     check_duplicates,
@@ -76,15 +80,38 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
     report_date = pd.to_datetime(selected_period)
 
-    with st.status("Loading data...", expanded=True) as load_st:
-        st.write(data_choice)
+
+    with st.status("Extracting Info...", expanded=True) as extract_st:
+        file_date, file_client_name, currency, rate, info = extract_info(uploaded_file)
+        if info['status'] != 'ok':
+            st.error(info['msg'])
+            extract_st.update(label="Extracting Info", state="error", expanded=True)
+            st.stop()
+        st.write(info['msg'])
+
+        extract_st.update(label="Extracting Info", state="complete", expanded=True)
+
+
+    with st.status("Validating Client and Date...", expanded=True) as val_st:
+        client_res = validate_client_name(file_client_name, selected_client)
+        if client_res["status"] != "ok":
+            st.write(client_res["message"])
+            val_st.update(label="Validating Client and Date", state="error", expanded=True)
+            st.stop()
+        st.write(client_res["message"])
+
+        date_res = validate_selected_date(file_date, selected_period)
+        if date_res["status"] != "ok":
+            st.write(date_res["msg"])
+            val_st.update(label="Validating Client and Date", state="error", expanded=True)
+            st.stop()
+        st.write(date_res["msg"])
+
+        val_st.update(label="Validating Client and Date", state="complete", expanded=True)
+
+
+    with st.status("Loading Data...", expanded=True) as load_st:
         data = load_logs(branch_id, selected_client, selected_period, data_choice)
-        st.write(data)
-        load_st.update(label="Processing Data", state="complete", expanded=True)
-
-
-
-
-
-
-    st.success(f"Successfully loaded data to database.")
+        data = strip_all(data)
+        data = special_char(data)
+        st.write(uploaded_file)

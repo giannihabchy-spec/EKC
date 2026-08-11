@@ -12,6 +12,55 @@ def load_sheet(file, sheet_name):
     return df
 
 
+def extract_info(file_path):
+
+    with pd.ExcelFile(file_path) as xls:
+
+        errors = []
+
+        info_df = pd.read_excel(xls, sheet_name="Info")
+        row = info_df.loc[0]
+
+        file_date = row.get('Month')
+        real_client = row.get('Restaurant Name')
+        cur = row.get('Currency')
+        if isinstance(cur,str):
+            currency = (
+                str(cur).strip()
+                .replace("’", "")
+                .replace("'", "")
+                .title()
+            )
+        else:
+            currency = pd.NA
+        rate = row.get('Rate')
+
+        info = {
+            "status": 'ok',
+            "msg": "All info extracted"
+        }
+
+        if pd.isna(file_date):
+            errors.append('Invalid report date')
+
+        if pd.isna(real_client):
+            errors.append('Invalid client name')
+
+        if pd.isna(currency):
+            errors.append('Invalid currency')
+
+        if pd.isna(rate):
+            errors.append('Invalid rate')
+        elif rate == 1:
+            errors.append('⚠️ Rate = 1')
+
+        if errors:
+            info['status'] = 'error'
+            info['msg'] = '  \n'.join(errors)
+
+        return file_date, real_client, currency, rate, info
+
+
 def extract_sheets_and_client(file_path, sheet_config):
 
     with pd.ExcelFile(file_path) as xls:
@@ -38,7 +87,6 @@ def extract_sheets_and_client(file_path, sheet_config):
             )
         else:
             currency = pd.NA
-
             
         rate = row.get('Rate')
 

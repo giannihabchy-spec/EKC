@@ -60,7 +60,9 @@ st.markdown("---")
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    uploaded_file = st.file_uploader("Upload Excel Report", type=["xlsx"], key="ptdb_upload")
+    folder_input = st.text_input("Path to the folder contining 'Auto Calc.xlsx'", placeholder="C:/Path/To/Folder")
+    destination = Path(folder_input).resolve()
+    master_path = destination / "Auto Calc.xlsx"
 with col2:
     client_options = get_client_list(supabase)
     selected_client = st.selectbox("Select Branch", options=client_options, key="ptdb_client")
@@ -71,24 +73,24 @@ with col3:
 with col4:
     all_available = check_data_coverage(branch_id, selected_client, selected_period)['result']
     data_choice = st.multiselect('Select Data to Load', options = all_available, default = all_available, key="ptdb_data")
-with col1:
-    folder_input = st.text_input("Location to save the data (Optional)", placeholder="C:/Path/To/Folder")
-    destination = Path(folder_input).resolve() if folder_input.strip() else None
 
 
 
 if st.button("▶ Run", type="primary", use_container_width=True):
 
 
-    if not uploaded_file or not selected_client or not selected_period or not data_choice:
+    if not folder_input or not selected_client or not selected_period or not data_choice:
         st.error("Please provide a file, a client, a date and the data to load.")
+        st.stop()
+    if not master_path.is_file():
+        st.error("No 'Auto Calc.xlsx' file found in the folder.")
         st.stop()
 
     report_date = pd.to_datetime(selected_period)
 
 
     with st.status("Extracting Info...", expanded=True) as extract_st:
-        file_date, file_client_name, currency, rate, info = extract_info(uploaded_file)
+        file_date, file_client_name, currency, rate, info = extract_info(master_path)
         if info['status'] != 'ok':
             st.error(info['msg'])
             extract_st.update(label="Extracting Info", state="error", expanded=True)

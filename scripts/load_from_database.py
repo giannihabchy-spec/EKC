@@ -14,6 +14,11 @@ _ensure_supa_env_from_secrets()
 from etl.special_characters import special_char
 from etl.strip_all import strip_all
 from etl.saver import save_cleaned_data
+from etl.validators import (
+    get_missing_columns,
+    check_sheets_exist
+)
+from etl.config import JOBS_CLOUD
 
 from supa.config import SHEET_CONFIG
 from supa.db import (
@@ -135,11 +140,17 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
         data = convert_sheet_names(data)
         data = normalize_all_dataframes(data)
-        sht_st = validate_required_columns(data, SHEET_CONFIG)
-        if sht_st['status'] != 'ok':
-            st.write(sht_st['message'])
-            extract_st.update(label="Validating Workbook", state="error", expanded=True)
+        missing_sheets = check_sheets_exist(master_path, JOBS_CLOUD)
+        if missing_sheets['status'] != 'ok':
+            st.write(missing_sheets['msg'])
+            valw_st.update(label='Validating Workbook',state="error", expanded=True)
             st.stop()
-        st.write(sht_st['message'])
+        st.write(missing_sheets['msg'])
+        missing_cols = get_missing_columns(master_path, JOBS_CLOUD)
+        if missing_cols['status'] != 'ok':
+            st.write(missing_cols['msg'])
+            valw_st.update(label='Validating Workbook',state="error", expanded=True)
+            st.stop()
+        st.write(missing_cols['msg'])
 
         valw_st.update(label="Validating Client and Date", state="complete", expanded=True)

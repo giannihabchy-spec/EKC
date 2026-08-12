@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+from pathlib import Path
 from supa.db import _ensure_supa_env_from_secrets
 
 st.set_page_config(
@@ -35,6 +36,7 @@ from supa.modeling import (
     normalize_string_columns,
     clean_numeric_values,
     create_sales_category,
+    convert_sheet_names
 )
 from supa.validators import (
     validate_required_columns,
@@ -69,6 +71,10 @@ with col3:
 with col4:
     all_available = check_data_coverage(branch_id, selected_client, selected_period)['result']
     data_choice = st.multiselect('Select Data to Load', options = all_available, default = all_available, key="ptdb_data")
+with col1:
+    folder_input = st.text_input("Location to save the data (Optional)", placeholder="C:/Path/To/Folder")
+    destination = Path(folder_input).resolve() if folder_input.strip() else None
+
 
 
 if st.button("▶ Run", type="primary", use_container_width=True):
@@ -112,6 +118,26 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
     with st.status("Loading Data...", expanded=True) as load_st:
         data = load_logs(branch_id, selected_client, selected_period, data_choice)
+        st.write('Data Loaded')
         data = strip_all(data)
         data = special_char(data)
-        st.write(uploaded_file)
+
+        if destination is not None:
+            save_cleaned_data(data, destination, f"{selected_client} logs.xlsx")
+            st.write('Data Saved')
+
+        load_st.update(label="Loading Data", state="complete", expanded=True)
+
+
+    with st.status("Validating Workbook...", expanded=True) as valw_st:
+
+        data = convert_sheet_names(data)
+        data = normalize_all_dataframes(data)
+        sht_st = validate_required_columns(data, SHEET_CONFIG)
+        if sht_st['status'] != 'ok':
+            st.write(sht_st['message'])
+            extract_st.update(label="Validating Workbook", state="error", expanded=True)
+            st.stop()
+        st.write(sht_st['message'])
+
+        valw_st.update(label="Validating Client and Date", state="complete", expanded=True)

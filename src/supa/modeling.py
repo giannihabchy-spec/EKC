@@ -279,3 +279,17 @@ def create_sales_category(sheets_dict):
 
     sheets_dict["Sales. Cat."] = sales_cat
     return sheets_dict
+
+
+def convert_sheet_names(data_dict): # for loading logs from database
+
+    names_map = {
+        'waste_inventory': 'W.Inv',
+        'waste_sales': 'W.Sal',
+        'inventory': 'Ending',
+        'production': 'PRD',
+        'purchase': 'Purchase',
+        'transfers': 'IN OUT'
+    }
+
+    return {names_map[k]: df for k, df in data_dict.items()}

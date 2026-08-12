@@ -262,7 +262,7 @@ def load_logs(branch_id, selected_client, selected_period, data_choice):
                 params = (selected_client, first_day, last_day))
             waste_df.columns = ['product description', 'qty', 'original remarks', 'date', 'item type', 'location']
 
-            data['waste_sales'] = waste_df.loc[waste_df['item type'] == 'Menu Items']
+            data['waste_sales'] = waste_df.loc[waste_df['item type'] == 'Menu Items'].rename(columns = {'product description': 'product'})
             data['waste_inventory'] = waste_df.loc[waste_df['item type'] == 'Inventory']
 
 

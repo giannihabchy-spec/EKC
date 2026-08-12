@@ -281,7 +281,7 @@ def create_sales_category(sheets_dict):
     return sheets_dict
 
 
-def convert_sheet_names(data_dict): # for loading logs from database
+def convert_sheet_names_to_autocalc(data_dict): # for loading logs from database (manual -> autocalc)
 
     names_map = {
         'waste_inventory': 'W.Inv',
@@ -290,6 +290,20 @@ def convert_sheet_names(data_dict): # for loading logs from database
         'production': 'PRD',
         'purchase': 'Purchase',
         'transfers': 'IN OUT'
+    }
+
+    return {names_map[k]: df for k, df in data_dict.items()}
+
+
+def convert_sheet_names_to_file_names(data_dict): # for loading logs from database (autocalc -> file names)
+
+    names_map = {
+        'W.Inv': 'wastage report',
+        'W.Sal': 'sales item wastage',
+        'Ending': 'inventory history',
+        'PRD': 'inventory production',
+        'Purchase': 'purchase master report for all branches',
+        'IN OUT': 'requisition summary'
     }
 
     return {names_map[k]: df for k, df in data_dict.items()}

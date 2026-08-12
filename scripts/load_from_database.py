@@ -1,4 +1,3 @@
-import pandas as pd
 import streamlit as st
 from pathlib import Path
 from supa.db import _ensure_supa_env_from_secrets
@@ -14,44 +13,35 @@ _ensure_supa_env_from_secrets()
 from etl.special_characters import special_char
 from etl.strip_all import strip_all
 from etl.saver import save_cleaned_data
+from etl.locate_cols import get_excel_cols
 from etl.validators import (
     get_missing_columns,
     check_sheets_exist
 )
 from etl.config import JOBS_CLOUD
+from etl.clear_sheets import clear_sheets
+from etl.writer import write_master
+from etl.reset_view import reset_workbook_view
 
-from supa.config import SHEET_CONFIG
+
 from supa.db import (
-    get_pg_connection,
     init_supabase,
     get_branch_id,
     check_data_coverage
 )
 from supa.loaders import(
     extract_info,
-    push_sheets,
     load_logs,
 )
 from supa.streamlit_functions import get_client_list, get_period_options
 from supa.modeling import (
     normalize_all_dataframes,
-    add_metadata,
-    convert_date_columns,
-    apply_grouping,
-    normalize_string_columns,
-    clean_numeric_values,
-    create_sales_category,
-    convert_sheet_names
+    convert_sheet_names_to_autocalc,
+    convert_sheet_names_to_file_names
 )
 from supa.validators import (
-    validate_required_columns,
     validate_client_name,
     validate_selected_date,
-    find_existing_data,
-    delete_existing_data,
-    check_duplicates,
-    check_rows,
-    validate_currency_rate
 )
 
 
@@ -66,8 +56,8 @@ st.markdown("---")
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     folder_input = st.text_input("Path to the folder contining 'Auto Calc.xlsx'", placeholder="C:/Path/To/Folder")
-    destination = Path(folder_input).resolve()
-    master_path = destination / "Auto Calc.xlsx"
+    destination = Path(folder_input).resolve() if folder_input.strip() else None
+    master_path = destination / "Auto Calc.xlsx" if destination else None
 with col2:
     client_options = get_client_list(supabase)
     selected_client = st.selectbox("Select Branch", options=client_options, key="ptdb_client")
@@ -90,8 +80,6 @@ if st.button("▶ Run", type="primary", use_container_width=True):
     if not master_path.is_file():
         st.error("No 'Auto Calc.xlsx' file found in the folder.")
         st.stop()
-
-    report_date = pd.to_datetime(selected_period)
 
 
     with st.status("Extracting Info...", expanded=True) as extract_st:
@@ -128,18 +116,22 @@ if st.button("▶ Run", type="primary", use_container_width=True):
         st.write('Data Loaded')
         data = strip_all(data)
         data = special_char(data)
-
-        if destination is not None:
-            save_cleaned_data(data, destination, f"{selected_client} logs.xlsx")
-            st.write('Data Saved')
+        save_cleaned_data(data, destination, f"{selected_client} logs.xlsx")
+        st.write('Data Saved')
 
         load_st.update(label="Loading Data", state="complete", expanded=True)
 
 
+    with st.status("Opening Workbook...", expanded=True) as status_ow:
+        reset_workbook_view(master_path)
+        st.write('Completed')
+        status_ow.update(label='Opening Workbook',state="complete", expanded=True)
+
+
     with st.status("Validating Workbook...", expanded=True) as valw_st:
 
-        data = convert_sheet_names(data)
-        data = normalize_all_dataframes(data)
+        data = convert_sheet_names_to_autocalc(data)
+        # data = normalize_all_dataframes(data)
         missing_sheets = check_sheets_exist(master_path, JOBS_CLOUD)
         if missing_sheets['status'] != 'ok':
             st.write(missing_sheets['msg'])
@@ -152,5 +144,25 @@ if st.button("▶ Run", type="primary", use_container_width=True):
             valw_st.update(label='Validating Workbook',state="error", expanded=True)
             st.stop()
         st.write(missing_cols['msg'])
+        loc_res = get_excel_cols(master_path, JOBS_CLOUD)
+        if loc_res['status'] != 'ok':
+            st.write(loc_res['msg'])
+            valw_st.update(label='Locating columns',state="error", expanded=True)
+            st.stop() 
+        jobs = loc_res['result']
+        data = convert_sheet_names_to_file_names(data)
+        st.write(loc_res['msg'])
 
-        valw_st.update(label="Validating Client and Date", state="complete", expanded=True)
+        valw_st.update(label="Validating Workbook", state="complete", expanded=True)
+
+
+    with st.status("Clearing...", expanded=True) as status_clear:
+        clear_sheets(str(master_path), jobs=jobs, cleaned=data, log_func=st.write)
+        status_clear.update(label="Clearing", state="complete", expanded=True)
+
+    with st.status("Writing...", expanded=True) as status_write:
+        write_master(str(master_path), data, jobs, suppress_warnings=True, log_func=st.write)
+        status_write.update(label="Writing", state="complete", expanded=True)
+        st.write("Loaded all available data")
+
+    st.success("✅ Successfully updated 'Auto Calc.xlsx'")

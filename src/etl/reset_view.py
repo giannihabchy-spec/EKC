@@ -1,6 +1,27 @@
 import xlwings as xw
+from pathlib import Path
+import streamlit as st
+
+def workbook_is_open(wb_path):
+    target = Path(wb_path).resolve()
+
+    for app in xw.apps:
+        for wb in app.books:
+            try:
+                if Path(wb.fullname).resolve() == target:
+                    return True
+            except Exception:
+                pass
+
+    return False
+
 
 def reset_workbook_view(wb_path: str) -> None:
+
+    if workbook_is_open(wb_path):
+        st.error("Please close the Workbook 'Auto Calc.xlsx' and try again")
+        st.stop()
+
     app = xw.App(visible=False, add_book=False)
     wb = None
     try:

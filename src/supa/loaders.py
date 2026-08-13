@@ -303,46 +303,48 @@ def load_logs(branch_id, selected_client, selected_period, data_choice):
                 params=(first_day, last_day, branch_id)
             )
             production.columns = ['production list', 'qty', 'location']
-
             data['production'] = production
 
 
-        # if 'transfers' in data_choice:
-
-        #     first_day = date.to_period("M").start_time
-        #     last_day = (date.to_period("M") + 1).start_time
-        #     transfers_query = """
-        #     SELECT count(*)
-        #     FROM transfers
-        #     WHERE date::timestamp >= %s
-        #     AND date::timestamp < %s
-        #     AND (
-        #         from_outlet = %s
-        #         OR to_outlet = %s
-        #     )
-        #     """
-        #     transfers = pd.read_sql(
-        #         transfers_query,
-        #         conn,
-        #         params=(first_day, last_day, selected_client, selected_client)
-        #     )
+        if 'purchase' in data_choice:
+            first_day = date.to_period("M").start_time
+            last_day = (date.to_period("M") + 1).start_time
+            query = """
+            SELECT location, item_name, base_qty, sub_total, supplier_name, invoice_number, invoice_date
+            FROM purchase_logs
+            WHERE outlet = %s
+            AND invoice_date >= %s
+            AND invoice_date < %s
+            """
+            purchase = pd.read_sql(
+                query,
+                conn,
+                params=(selected_client, first_day, last_day)
+            )
+            purchase.columns = ['location', 'raw materials','qty','total cost','supplier names','invoice #','purchase date']
+            data['purchase'] = purchase
 
 
-        # if 'purchase' in data_choice:
-        #     first_day = date.to_period("M").start_time
-        #     last_day = (date.to_period("M") + 1).start_time
-        #     query = """
-        #     SELECT item_name, base_qty, sub_total
-        #     FROM purchase_logs
-        #     WHERE outlet = %s
-        #     AND invoice_date >= %s
-        #     AND invoice_date < %s
-        #     """
-        #     purchase = pd.read_sql(
-        #         query,
-        #         conn,
-        #         params=(selected_client, first_day, last_day)
-        #     )
+        if 'transfers' in data_choice:
+
+            first_day = date.to_period("M").start_time
+            last_day = (date.to_period("M") + 1).start_time
+            transfers_query = """
+            SELECT from_outlet, from_location, to_outlet, to_location, date, details
+            FROM transfers
+            WHERE date::timestamp >= %s
+            AND date::timestamp < %s
+            AND (
+                from_outlet = %s
+                OR to_outlet = %s
+            )
+            """
+            transfers = pd.read_sql(
+                transfers_query,
+                conn,
+                params=(first_day, last_day, selected_client, selected_client)
+            )
+
 
     finally:
         conn.close()

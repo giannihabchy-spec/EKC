@@ -37,7 +37,8 @@ from supa.streamlit_functions import get_client_list, get_period_options
 from supa.modeling import (
     normalize_all_dataframes,
     convert_sheet_names_to_autocalc,
-    convert_sheet_names_to_file_names
+    convert_sheet_names_to_file_names,
+    readable_dates
 )
 from supa.validators import (
     validate_client_name,
@@ -116,7 +117,8 @@ if st.button("▶ Run", type="primary", use_container_width=True):
         st.write('Data Loaded')
         data = strip_all(data)
         data = special_char(data)
-        save_cleaned_data(data, destination, f"{selected_client} logs.xlsx")
+        date_str = readable_dates(selected_period)
+        save_cleaned_data(data, destination, f"{selected_client} logs {date_str}.xlsx")
         st.write('Data Saved')
 
         load_st.update(label="Loading Data", state="complete", expanded=True)

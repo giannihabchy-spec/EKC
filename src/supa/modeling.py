@@ -307,3 +307,27 @@ def convert_sheet_names_to_file_names(data_dict): # for loading logs from databa
     }
 
     return {names_map[k]: df for k, df in data_dict.items()}
+
+
+def readable_dates(selected_period):
+
+    dates_mapping = {
+        '01': 'Jan',
+        '02': 'Feb',
+        '03': 'Mar',
+        '04': 'Apr',
+        '05': 'May',
+        '06': 'Jun',
+        '07': 'Jul',
+        '08': 'Aug',
+        '09': 'Sep',
+        '10': 'Oct',
+        '11': 'Nov',
+        '12': 'Dec'
+    }
+
+    date = selected_period.split('-')
+    year = date[0]
+    month = date[1]
+
+    return f"{year}-{dates_mapping.get(month)}"

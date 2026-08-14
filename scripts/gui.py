@@ -24,7 +24,7 @@ from etl.clear_sheets import clear_sheets
 from etl.writer import write_master
 from etl.validators import check_sheets_exist, get_missing_columns
 from etl.locate_cols import get_excel_cols
-from etl.extract_sheets import extract_sheets
+from etl.extract_sheets import extract_sheets, sheets_to_extract
 
 st.markdown("""
     <style>
@@ -121,7 +121,7 @@ if st.button("▶ Run Pipeline", type="primary", use_container_width=True):
 
             if mode == "all":
                 with st.status("Extracting sheets...", expanded=True) as status_ex:
-                    ex_res = extract_sheets(master_path, ['Ending'], jobs, cleaned)
+                    ex_res = extract_sheets(master_path, jobs, cleaned)
                     jobs = ex_res['jobs']
                     cleaned = ex_res['cleaned_dict']
                     st.write("Completed")

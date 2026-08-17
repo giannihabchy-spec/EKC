@@ -355,8 +355,8 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
             trs = trs.explode('details')
             trs = trs.loc[trs['status'].isin(['Received', 'Received with Issue', 'Direct'])].copy()
             trs = make_columns_date(trs, ['date'])
-            trs.columns = ['from outlet','from location','to outlet','to location','date','details','status']
-            trs['item name'] = trs['details'].apply(lambda x: x.get('item_name'))
+            trs.columns = ['from branch','from location','to branch','to location','date','details','status']
+            trs['product'] = trs['details'].apply(lambda x: x.get('item_name'))
             trs['qty'] = trs['details'].apply(lambda x: x.get('received_qty'))
             trs['requested qty'] = trs['details'].apply(lambda x: x.get('requested_qty'))
             trs['fulfilled qty'] = trs['details'].apply(lambda x: x.get('fulfilled_qty'))

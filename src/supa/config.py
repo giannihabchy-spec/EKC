@@ -662,35 +662,36 @@ SHEET_CONFIG = {
             'avgpurusacost'
         ],
 
-        "group_before_load": True,
-        "group_by": [
-            'menu_items',
-            'product_description'
-        ],
-        "agg": {
-            'category': 'first',
-            'item_group': 'first',
-            'qty': 'sum',
-            'unit': 'first',
-            'avg_cost': 'first',
-            'total_cost': 'sum',
-            'sales': 'first',
-            'waste_sal': 'first',
-            'stock_out': 'sum',
-            'qty_if': 'first',
-            'unit_stock': 'first',
-            'location': 'first',
-            'qty_pur': 'first',
-            'total_pur': 'first',
-            'avgpurcost': 'first',
-            'avgpurusacost': 'first',
-        },
+        # "group_before_load": True,
+        # "group_by": [
+        #     'menu_items',
+        #     'product_description'
+        # ],
+        # "agg": {
+        #     'category': 'first',
+        #     'item_group': 'first',
+        #     'qty': 'sum',
+        #     'unit': 'first',
+        #     'avg_cost': 'first',
+        #     'total_cost': 'sum',
+        #     'sales': 'first',
+        #     'waste_sal': 'first',
+        #     'stock_out': 'sum',
+        #     'qty_if': 'first',
+        #     'unit_stock': 'first',
+        #     'location': 'first',
+        #     'qty_pur': 'first',
+        #     'total_pur': 'first',
+        #     'avgpurcost': 'first',
+        #     'avgpurusacost': 'first',
+        # },
 
         "unique_key": [
             'branch_id',
             'report_date',
             'menu_items',
-            'product_description'
+            'product_description',
+            'qty'
         ],
 
         "load_mode": "insert",
@@ -730,34 +731,34 @@ SHEET_CONFIG = {
             'adjustment'
         ],
 
-        "group_before_load": True,
-        "group_by": [
-            'production_name',
-            'product_description'
-        ],
-        "agg": {
-            'location': 'first',
-            'qty': 'sum',
-            'unit_name': 'first',
-            'cost': 'first',
-            'average_cost': 'sum',
-            'qty_to_prepared': 'first',
-            'prepared_unit': 'first',
-            'cost_for_1': 'sum',
-            'beginning_inv': 'first',
-            'prd_out': 'first',
-            'trout': 'first',
-            'sales': 'first',
-            'waste': 'first',
-            'ending_inv': 'first',
-            'total_prd': 'first',
-            'calculation': 'sum',
-            'stock_prdk_out': 'sum',
-            'qty_format': 'first',
-            'unit_stock': 'first',
-            'item_group': 'first',
-            'adjustment': 'first',
-        },
+        # "group_before_load": True,
+        # "group_by": [
+        #     'production_name',
+        #     'product_description'
+        # ],
+        # "agg": {
+        #     'location': 'first',
+        #     'qty': 'sum',
+        #     'unit_name': 'first',
+        #     'cost': 'first',
+        #     'average_cost': 'sum',
+        #     'qty_to_prepared': 'first',
+        #     'prepared_unit': 'first',
+        #     'cost_for_1': 'sum',
+        #     'beginning_inv': 'first',
+        #     'prd_out': 'first',
+        #     'trout': 'first',
+        #     'sales': 'first',
+        #     'waste': 'first',
+        #     'ending_inv': 'first',
+        #     'total_prd': 'first',
+        #     'calculation': 'sum',
+        #     'stock_prdk_out': 'sum',
+        #     'qty_format': 'first',
+        #     'unit_stock': 'first',
+        #     'item_group': 'first',
+        #     'adjustment': 'first',
+        # },
 
         "unique_key": [
             'branch_id',
@@ -770,7 +771,8 @@ SHEET_CONFIG = {
 
         "no_nulls": [
             'production_name',
-            'product_description'
+            'product_description',
+            'qty'
         ]
     },
 

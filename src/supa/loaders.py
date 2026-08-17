@@ -229,7 +229,7 @@ def push_sheets(sheets: dict, sheet_config: dict, conn, ingnore_missing_cols: bo
         }
 
 
-def load_logs(branch_id, selected_client, selected_period, data_choice):
+def load_logs(branch_id, selected_client, selected_period, data_choice, client_currency, client_rate):
     data = {}
 
     table_mapping = {
@@ -310,7 +310,7 @@ def load_logs(branch_id, selected_client, selected_period, data_choice):
             first_day = date.to_period("M").start_time
             last_day = (date.to_period("M") + 1).start_time
             query = """
-            SELECT location, item_name, base_qty, sub_total, supplier_name, invoice_number, invoice_date
+            SELECT id, location, item_name, base_qty, sub_total, supplier_name, invoice_number, invoice_date, currency
             FROM purchase_logs
             WHERE outlet = %s
             AND invoice_date >= %s
@@ -321,7 +321,13 @@ def load_logs(branch_id, selected_client, selected_period, data_choice):
                 conn,
                 params=(selected_client, first_day, last_day)
             )
-            purchase.columns = ['location', 'raw materials','qty','total cost','supplier names','invoice #','purchase date']
+            purchase.columns = ['id', 'location', 'raw materials','qty','total cost','supplier names','invoice #','purchase date', 'currency']
+
+            if client_currency == 'Usd':
+                purchase.loc[purchase['currency'].str.lower() != client_currency.lower(), 'total cost'] = purchase.loc[purchase['currency'].str.lower() != client_currency.lower(), 'total cost'] / client_rate
+            else:
+                purchase.loc[purchase['currency'].str.lower() != client_currency.lower(), 'total cost'] = purchase.loc[purchase['currency'].str.lower() != client_currency.lower(), 'total cost'] * client_rate
+
             data['purchase'] = purchase
 
 

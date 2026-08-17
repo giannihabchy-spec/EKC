@@ -85,6 +85,7 @@ def extract_sheets(file_path, jobs, cleaned_dict):
             how = 'cross'
         )
         uc = uc.rename(columns = {'product description': 'products'})
+        uc = uc.drop_duplicates(subset = ['products', 'location']).copy()
         uc = uc.sort_values(['location', 'products']).copy()
         sheets_dict['Unit Cost'] = uc.copy()
 

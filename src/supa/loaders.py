@@ -4,6 +4,7 @@ import numpy as np
 from psycopg2.extras import execute_values
 from psycopg2 import sql as psql
 from supa.db import get_pg_connection
+from etl.utils import make_columns_date
 
 
 def load_sheet(file, sheet_name):
@@ -336,7 +337,7 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
             first_day = date.to_period("M").start_time
             last_day = (date.to_period("M") + 1).start_time
             transfers_query = """
-            SELECT from_outlet, from_location, to_outlet, to_location, date, details
+            SELECT from_outlet, from_location, to_outlet, to_location, date, details, status
             FROM transfers
             WHERE date::timestamp >= %s
             AND date::timestamp < %s
@@ -345,11 +346,25 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
                 OR to_outlet = %s
             )
             """
-            transfers = pd.read_sql(
+            trs = pd.read_sql(
                 transfers_query,
                 conn,
                 params=(first_day, last_day, selected_client, selected_client)
             )
+
+            trs = trs.explode('details')
+            trs = trs.loc[trs['status'].isin(['Received', 'Received with Issue', 'Direct'])].copy()
+            trs = make_columns_date(trs, ['date'])
+            trs.columns = ['from outlet','from location','to outlet','to location','date','details','status']
+            trs['item name'] = trs['details'].apply(lambda x: x.get('item_name'))
+            trs['qty'] = trs['details'].apply(lambda x: x.get('received_qty'))
+            trs['requested qty'] = trs['details'].apply(lambda x: x.get('requested_qty'))
+            trs['fulfilled qty'] = trs['details'].apply(lambda x: x.get('fulfilled_qty'))
+            trs['requested unit'] = trs['details'].apply(lambda x: x.get('requested_unit'))
+            trs['fulfilled unit'] = trs['details'].apply(lambda x: x.get('fulfilled_unit'))
+            trs = trs.drop(columns = 'details').copy()
+
+            data['transfers'] = trs
 
 
     finally:

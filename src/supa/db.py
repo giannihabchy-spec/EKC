@@ -365,3 +365,46 @@ def check_data_coverage(branch_id, selected_client, selected_period):
         'selected_client': selected_client,
         'selected_period': selected_period
     }
+
+
+def get_currency_rate(branch_id): # for loading logs
+
+    try:
+        response = (
+            supabase
+            .table("branches")
+            .select("id, currency, client_rate")
+            .eq("id", branch_id)
+            .execute()
+        )
+    except Exception as e:
+        msg = f"⚠️ Failed to fetch client's omega_currency"
+        return {
+            "status": "error",
+            "message": msg,
+            "omega_currency": None
+        }
+
+    rows = response.data if response and hasattr(response, "data") else []
+
+    if not rows:
+        msg = f"⚠️ Client was not found in the clients table"
+        return {
+            "status": "error",
+            "message": msg,
+            "omega_currency": None
+        }
+
+    if len(rows) > 1:
+        msg = f"⚠️ Multiple currencies found for the client"
+        return {
+            "status": "error",
+            "message": msg,
+            "omega_currency": None
+        }
+
+    return {
+            "status": "ok",
+            "currency": rows[0]["currency"],
+            "rate": rows[0]["client_rate"]
+        }

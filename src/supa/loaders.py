@@ -262,8 +262,8 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
                 params = (selected_client, first_day, last_day))
             waste_df.columns = ['product description', 'qty', 'original remarks', 'date', 'item type', 'location']
 
-            data['waste_sales'] = waste_df.loc[waste_df['item type'] == 'Menu Items'].rename(columns = {'product description': 'product'})
-            data['waste_inventory'] = waste_df.loc[waste_df['item type'] == 'Inventory']
+            data['waste_sales'] = waste_df.loc[waste_df['item type'] == 'Menu Items'].rename(columns = {'product description': 'product'}).drop(columns= 'item type').copy()
+            data['waste_inventory'] = waste_df.loc[waste_df['item type'] == 'Inventory'].drop(columns= 'item type').copy()
 
 
         if 'inventory' in data_choice:
@@ -310,7 +310,7 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
             first_day = date.to_period("M").start_time
             last_day = (date.to_period("M") + 1).start_time
             query = """
-            SELECT id, location, item_name, base_qty, sub_total, supplier_name, invoice_number, invoice_date, currency
+            SELECT location, item_name, base_qty, sub_total, supplier_name, invoice_number, invoice_date, currency
             FROM purchase_logs
             WHERE outlet = %s
             AND invoice_date >= %s
@@ -321,7 +321,7 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
                 conn,
                 params=(selected_client, first_day, last_day)
             )
-            purchase.columns = ['id', 'location', 'raw materials','qty','total cost','supplier names','invoice #','purchase date', 'currency']
+            purchase.columns = ['location', 'raw materials','qty','total cost','supplier names','invoice #','purchase date', 'currency']
 
             if client_currency == 'Usd':
                 purchase.loc[purchase['currency'].str.lower() != client_currency.lower(), 'total cost'] = purchase.loc[purchase['currency'].str.lower() != client_currency.lower(), 'total cost'] / client_rate

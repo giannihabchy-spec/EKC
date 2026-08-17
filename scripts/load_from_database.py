@@ -27,7 +27,8 @@ from etl.reset_view import reset_workbook_view
 from supa.db import (
     init_supabase,
     get_branch_id,
-    check_data_coverage
+    check_data_coverage,
+    get_currency_rate
 )
 from supa.loaders import(
     extract_info,
@@ -43,6 +44,7 @@ from supa.modeling import (
 from supa.validators import (
     validate_client_name,
     validate_selected_date,
+    validate_currency_rate
 )
 
 
@@ -76,21 +78,47 @@ if st.button("▶ Run", type="primary", use_container_width=True):
 
 
     if not folder_input or not selected_client or not selected_period or not data_choice:
-        st.error("Please provide a file, a client, a date and the data to load.")
+        st.error("Please provide a folder lcation, a client, a date and the data to load.")
         st.stop()
+
+
+    with st.status("Loading Data...", expanded=True) as load_st:
+        cur_rate = get_currency_rate(branch_id)
+        currency = cur_rate['currency']
+        rate = cur_rate['rate']
+
+        data = load_logs(branch_id, selected_client, selected_period, data_choice, currency, rate)
+        st.write('Data Loaded')
+        data = strip_all(data)
+        data = special_char(data)
+        date_str = readable_dates(selected_period)
+        save_cleaned_data(data, destination, f"{selected_client} logs {date_str}.xlsx")
+        st.write('Data Saved')
+
+        load_st.update(label="Loading Data", state="complete", expanded=True)
+
+
     if not master_path.is_file():
-        st.error("No 'Auto Calc.xlsx' file found in the folder.")
+        with st.status("Extracting Info...", expanded=True) as status_ow:
+            st.error("No 'Auto Calc.xlsx' file found in the folder.")
+            status_ow.update(label='Workbook not found',state="error", expanded=False)
+
+        st.success("✅ Successfully loaded available data")
         st.stop()
 
 
     with st.status("Extracting Info...", expanded=True) as extract_st:
-        file_date, file_client_name, currency, rate, info = extract_info(master_path)
+        file_date, file_client_name, file_currency, file_rate, info = extract_info(master_path)
         if info['status'] != 'ok':
             st.error(info['msg'])
             extract_st.update(label="Extracting Info", state="error", expanded=True)
             st.stop()
         st.write(info['msg'])
-
+        cur_rate_val = validate_currency_rate(branch_id, file_currency, file_rate)
+        if cur_rate_val['status'] != 'ok':
+            st.error(info['msg'])
+            extract_st.update(label="Extracting Info", state="error", expanded=True)
+            st.stop()
         extract_st.update(label="Extracting Info", state="complete", expanded=True)
 
 
@@ -110,18 +138,6 @@ if st.button("▶ Run", type="primary", use_container_width=True):
         st.write(date_res["msg"])
 
         val_st.update(label="Validating Client and Date", state="complete", expanded=True)
-
-
-    with st.status("Loading Data...", expanded=True) as load_st:
-        data = load_logs(branch_id, selected_client, selected_period, data_choice)
-        st.write('Data Loaded')
-        data = strip_all(data)
-        data = special_char(data)
-        date_str = readable_dates(selected_period)
-        save_cleaned_data(data, destination, f"{selected_client} logs {date_str}.xlsx")
-        st.write('Data Saved')
-
-        load_st.update(label="Loading Data", state="complete", expanded=True)
 
 
     with st.status("Opening Workbook...", expanded=True) as status_ow:

@@ -408,3 +408,21 @@ def get_currency_rate(branch_id): # for loading logs
             "currency": rows[0]["currency"],
             "rate": rows[0]["client_rate"]
         }
+
+
+def get_locations(branch_id):
+    conn = get_pg_connection()
+
+    try:
+        query = """
+            SELECT area_name
+            FROM areas
+            WHERE branch_id = %s;
+        """
+
+        data = pd.read_sql(query, conn, params=(branch_id,))
+        
+    finally:
+        conn.close()
+
+    return list(data['area_name'])

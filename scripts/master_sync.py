@@ -69,3 +69,26 @@ with col3:
 with col4:
     all_locations = get_locations(branch_id)
     locations = st.multiselect('Select Locations', options = all_locations, default = all_locations, key="ptdb_data")
+
+
+if st.button("▶ Run", type="primary", use_container_width=True):
+
+
+    if not folder_input:
+        st.error("Please provide a folder location")
+        st.stop()
+    if not selected_client:
+        st.error("Please select a client")
+        st.stop()
+    if not source:
+        st.error("Please select a source")
+        st.stop()
+    if not locations:
+        st.error("Please select the location(s)")
+        st.stop()
+
+    base_folder = Path(folder_input).resolve()
+    jobs = get_jobs(source)
+
+    if not base_folder.is_dir():
+        st.error(f"Error: '{base_folder}' is not a valid directory.")

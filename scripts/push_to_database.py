@@ -51,7 +51,7 @@ with col2:
     selected_client = st.selectbox("Select Branch", options=client_options, key="ptdb_client")
 with col3:
     period_options = get_period_options()
-    selected_period = st.selectbox("Select Reporting Period", options=period_options, key="ptdb_period")
+    selected_period = st.selectbox("Select Reporting Period", options=period_options, index = 1, key="ptdb_period")
 with col4:
     mode = st.selectbox("Select Mode", options=["Do not overwrite", "Overwrite"], index=0, key="ptdb_mode")
 

@@ -67,7 +67,7 @@ with col2:
     branch_id = get_branch_id(selected_client)['branch_id']
 with col3:
     period_options = get_period_options()
-    selected_period = st.selectbox("Select Reporting Period", options=period_options, key="ptdb_period")
+    selected_period = st.selectbox("Select Reporting Period", options=period_options, index = 1, key="ptdb_period")
 with col4:
     all_available = check_data_coverage(branch_id, selected_client, selected_period)['result']
     data_choice = st.multiselect('Select Data to Load', options = all_available, default = all_available, key="ptdb_data")

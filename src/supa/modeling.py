@@ -227,7 +227,7 @@ def adjust_configs(sheet_config):
     config = {
         key: value
         for key, value in sheet_config.items()
-        if key in ["Sales", "Purchase", "W.Inv", "W.Sal"]
+        if key in ["Sales", "Purchase", "W.Inv", "W.Sal", "Ending"]
     }
 
     for sheet_name, conf in config.items():

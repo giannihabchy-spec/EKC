@@ -178,13 +178,13 @@ if st.button("▶ Run", type="primary", use_container_width=True):
         cleaned = add_quick_variance(cleaned)
         st.write(norm_res["message"])
 
-        grp_res = apply_grouping(cleaned, SHEET_CONFIG)
-        if grp_res["status"] != "ok":
-            st.write(grp_res["message"])
-            form_st.update(label="Formatting Data", state="error", expanded=True)
-            st.stop()
-        cleaned = grp_res["data"]
-        st.write(grp_res["message"])
+        # grp_res = apply_grouping(cleaned, SHEET_CONFIG)
+        # if grp_res["status"] != "ok":
+        #     st.write(grp_res["message"])
+        #     form_st.update(label="Formatting Data", state="error", expanded=True)
+        #     st.stop()
+        # cleaned = grp_res["data"]
+        # st.write(grp_res["message"])
 
         meta_res = add_metadata(cleaned, branch_id, selected_period, 'Unknown', 0)
         if meta_res["status"] != "ok":

@@ -11,9 +11,20 @@ st.set_page_config(
 _ensure_supa_env_from_secrets()
 
 from supa.config import SHEET_CONFIG
-from supa.db import get_pg_connection, init_supabase, get_branch_id
-from supa.loaders import extract_sheets_and_client, push_sheets
-from supa.streamlit_functions import get_client_list, get_period_options
+from supa.db import (
+    get_pg_connection, 
+    init_supabase,
+    get_branch_id,
+    get_last_report_date
+)
+from supa.loaders import (
+    extract_sheets_and_client,
+    push_sheets,
+)
+from supa.streamlit_functions import (
+    get_client_list,
+    get_period_options,
+)
 from supa.modeling import (
     normalize_all_dataframes,
     add_metadata,
@@ -21,7 +32,6 @@ from supa.modeling import (
     apply_grouping,
     normalize_string_columns,
     clean_numeric_values,
-    create_sales_category,
 )
 from supa.validators import (
     validate_required_columns,
@@ -31,7 +41,7 @@ from supa.validators import (
     delete_existing_data,
     check_duplicates,
     check_rows,
-    validate_currency_rate
+    validate_currency_rate,
 )
 
 
@@ -49,11 +59,15 @@ with col1:
 with col2:
     client_options = get_client_list(supabase)
     selected_client = st.selectbox("Select Branch", options=client_options, key="ptdb_client")
+    branch_id = get_branch_id(selected_client)['branch_id']
 with col3:
     period_options = get_period_options()
     selected_period = st.selectbox("Select Reporting Period", options=period_options, index = 1, key="ptdb_period")
 with col4:
     mode = st.selectbox("Select Mode", options=["Do not overwrite", "Overwrite"], index=0, key="ptdb_mode")
+
+st.write(get_last_report_date(branch_id, selected_client))
+
 
 if st.button("▶ Run", type="primary", use_container_width=True):
 

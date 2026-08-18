@@ -5,6 +5,7 @@ import psycopg2
 import streamlit as st
 from pathlib import Path
 import tomllib
+from supa.modeling import readable_dates
 
 
 ROOT = Path(__file__).parents[2]
@@ -426,3 +427,28 @@ def get_locations(branch_id):
         conn.close()
 
     return list(data['area_name'])
+
+
+def get_last_report_date(branch_id, selected_client):
+    conn = get_pg_connection()
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                select max(report_date)
+                from ac_discount_category
+                where branch_id = %s;
+                """
+                , (branch_id,)
+            )
+            last_date = cur.fetchone()[0]
+
+        if last_date is None:
+            return f'The Database does not contain any data for {selected_client}'
+
+        last_date = readable_dates(last_date.strftime("%Y-%m"))
+        return f"Last Report Date for {selected_client}: {last_date}"
+
+    finally:
+        conn.close()

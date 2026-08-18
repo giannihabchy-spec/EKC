@@ -395,7 +395,7 @@ def validate_file_dates(sheets_dict, selected_date): # for quick Variance
 
     for df in sheets_dict.values():
         file_date = df['file date'].iloc[0]
-        all_dates.append((file_date.year, file_date.month))
+        all_dates.append(file_date)
 
     if len(set(all_dates)) > 1:
         return {
@@ -403,10 +403,9 @@ def validate_file_dates(sheets_dict, selected_date): # for quick Variance
             'msg': 'Files contain multiple dates'
         }
     
-    file_date_year = all_dates[0][0]
-    file_date_month = all_dates[0][1]
+    file_date = all_dates[0]
 
-    condition = (file_date_month == selected_date.month) and (file_date_year == selected_date.year)
+    condition = (file_date.month == selected_date.month) and (file_date.year == selected_date.year)
 
     if condition:
         return {

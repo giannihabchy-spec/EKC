@@ -14,7 +14,7 @@ def preprocess(path):
     data = keep_cols_by_index(data, [0,1,4])
     data.columns = ['group', 'menu items', 'sp exc vat']
     data = drop_rows(data, 'menu items', 'Description')
-    data = drop_rows(data, 'group', 'Item Id')
+    data = drop_rows(data, 'group', 'Item ID')
     data = drop_rows(data, 'group', date = True)
     data = data.reset_index(drop = True)
     first_idx = data.loc[data['menu items'].notna()].index[0]

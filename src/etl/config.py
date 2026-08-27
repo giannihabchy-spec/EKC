@@ -79,7 +79,7 @@ JOBS_CLOUD = [
 
     { # programming summary inventory -> Unit Cost #### ----------
     "key": "programming summary inventory",
-    "df_cols": ['category','group','product description','qty I F','unit','pur unit','qty pur','inv unit','lbp'],
+    "df_cols": ['category','group','product description','qty i f','unit','pur unit','qty pur','inv unit','lbp'],
     "sheet": "Unit Cost",
     "start_row": 2,
     },

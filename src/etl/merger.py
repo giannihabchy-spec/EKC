@@ -89,43 +89,24 @@ def merge_disc(cleaned: dict) -> dict:
         raise ValueError("Discount files not available in the right way.")
 
 
+def merge_recipes(cleaned: dict, source: str) -> dict:
 
+    recipes = cleaned.get("sales items ingredients")
+    if source == 'cloud':
+        sp = cleaned.get("programming summary sales")
+    else:
+        sp = cleaned.get("list sales items")
 
+    if recipes is None or sp is None:
+        return cleaned
 
+    recipes = recipes.merge(
+        sp[['menu items', 'category', 'group']],
+        on = 'menu items',
+        how = 'left'
+    )[['category', 'group', 'menu items', 'product description', 'qty']].sort_values(
+        ['category', 'group', 'menu items', 'product description']
+    )
 
-
-
-
-
-
-
-
-
-
-
-
-
-# def merge_disc(cleaned: dict) -> dict:
-
-#     desc = cleaned.get("discount by description by employee")
-#     inv = cleaned.get("discount by invoice with details")
-
-#     if desc is not None and inv is not None:
-        
-#         cleaned['discount by invoice with percentage'] = inv.merge(
-#             desc[['check','discount percentage']],
-#             on = 'check',
-#             how = 'left'
-#         )
-
-#     final_inv = cleaned.get('discount by invoice with percentage')
-#     item = cleaned.get('discount by items')
-
-#     if final_inv is not None and item is not None:
-#         cols = ['check', 'description', 'qty', 'discount percentage']
-#         cleaned['final discount'] = pd.concat([
-#             item[cols],
-#             final_inv[cols]
-#         ])
-
-#     return cleaned
+    cleaned["sales items ingredients"] = recipes
+    return cleaned

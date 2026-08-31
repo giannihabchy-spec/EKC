@@ -18,7 +18,8 @@ from etl.orchestrator import (
 )  
 from etl.merger import (
     merge_disc,
-    merge_ib
+    merge_ib,
+    merge_recipes
 )
 from etl.strip_all import strip_all
 from etl.special_characters import special_char
@@ -109,6 +110,7 @@ if st.button("▶ Run Pipeline", type="primary", use_container_width=True):
         cleaned = special_char(cleaned)
         cleaned = merge_ib(cleaned)
         cleaned = merge_disc(cleaned)
+        cleaned = merge_recipes(cleaned, source)
         save_cleaned_data(cleaned, base_folder)
         st.write("Cleaned data is saved.")
         status_clean.update(label="Cleaning", state="complete", expanded=True)

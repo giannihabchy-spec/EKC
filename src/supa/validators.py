@@ -421,6 +421,12 @@ def validate_file_dates(sheets_dict, selected_date): # for quick Variance
 
 def validate_omega_name(sheets_dict, supa_list): # for quick Variance
 
+    if supa_list is None:
+        return {
+            'status': 'error',
+            'msg': f"Please fill 'omega_name' in the database"
+        }
+
     all_names = []
 
     for df in sheets_dict.values():

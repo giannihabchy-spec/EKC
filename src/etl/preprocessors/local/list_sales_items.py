@@ -30,5 +30,5 @@ def preprocess(path):
     data = data[cols]
     data = make_columns_numeric(data,['Price'])
     data.columns = ['category', 'group', 'menu items', 'sp exc vat']
-
+    data = data.sort_values(['category', 'group', 'menu items'])
     return data

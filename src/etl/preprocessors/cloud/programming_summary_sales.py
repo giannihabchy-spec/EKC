@@ -34,4 +34,5 @@ def preprocess(path):
     data = make_columns_numeric(data, ['sp exc vat'])
     cols = ['id', 'category', 'group', 'menu items', 'sp exc vat']
     data = data[cols].copy()
+    data = data.sort_values(['category', 'group', 'menu items'])
     return data

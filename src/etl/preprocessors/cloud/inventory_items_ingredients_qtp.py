@@ -38,4 +38,5 @@ def preprocess(path):
     cols = ['Category', 'Group', 'Production Name', 'Product Description', 'Qty', 'Unit','Qty to be Prepared', 'Prepared Unit']
     data = data[cols].copy()
     data.columns = ['category', 'group', 'production name', 'product description', 'qty', 'unit','qty to prepared', 'prepared unit']
+    data = data.sort_values(['category', 'group', 'production name', 'product description'])
     return data

@@ -17,4 +17,5 @@ def preprocess(path):
     data = make_columns_numeric(data,['Qty'], er='coerce')
     data = drop_na_by_name(data,['Qty'])
     data.columns = ['menu items','product description','qty']
+    data = data.sort_values(['menu items','product description'])
     return data

@@ -24,6 +24,7 @@ def preprocess(path):
     cols = ['item','desc','qty']
     data = data[cols]
     data.columns = ['menu items','product description','qty']
+    data = data.sort_values(['menu items','product description'])
     return data
 
 

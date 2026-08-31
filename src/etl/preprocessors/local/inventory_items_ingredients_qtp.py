@@ -28,4 +28,5 @@ def preprocess(path):
     data = data[cols].copy()
     data = make_columns_numeric(data,['Qty','Qty to be Prepared'])
     data.columns = ['production name', 'product description', 'qty', 'unit','qty to prepared', 'prepared unit']
+    data = data.sort_values(['production name', 'product description'])
     return data

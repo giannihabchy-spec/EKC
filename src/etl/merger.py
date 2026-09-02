@@ -128,7 +128,7 @@ def merge_sales_by_items(cleaned: dict, source: str) -> dict:
         left_on = 'description',
         right_on = 'menu items',
         how = 'left'
-    )[['category', 'group', 'description', 'qty', 'gross sales']]
+    )[['category', 'group', 'description', 'qty sold', 'gross sales']]
 
     sales[['category', 'group']] = sales[['category', 'group']].fillna('not available')
 

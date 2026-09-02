@@ -113,7 +113,7 @@ if st.button("▶ Run Pipeline", type="primary", use_container_width=True):
         cleaned = merge_ib(cleaned)
         cleaned = merge_disc(cleaned)
         cleaned = merge_recipes(cleaned, source)
-        cleaned = merge_sales_by_items(cleaned)
+        cleaned = merge_sales_by_items(cleaned, source)
         cleaned = _sort(cleaned)
         save_cleaned_data(cleaned, base_folder)
         st.write("Cleaned data is saved.")

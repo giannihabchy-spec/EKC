@@ -1,6 +1,7 @@
 from pathlib import Path
 import streamlit as st
 import pandas as pd
+import regex as re
 
 
 _SHEET_NAME_MAP: dict[str, str] = {
@@ -32,6 +33,9 @@ def save_cleaned_data(cleaned: dict[str, object], raw_folder: str | Path, result
                 sheet_name = _SHEET_NAME_MAP.get(name, name)[:31]
 
                 value.to_excel(writer, sheet_name=sheet_name, index=False)
+
+                if re.search(r" \d+$", sheet_name):
+                    writer.book[sheet_name].sheet_state = "hidden"
 
     except PermissionError:
         st.write(f"❌❌ please close the excel file '{result_name}' and try again.")

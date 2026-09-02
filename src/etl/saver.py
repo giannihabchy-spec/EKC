@@ -1,7 +1,8 @@
-from pathlib import Path
 import streamlit as st
 import pandas as pd
-import regex as re
+import re
+from openpyxl.utils import get_column_letter
+from pathlib import Path
 
 
 _SHEET_NAME_MAP: dict[str, str] = {
@@ -33,6 +34,27 @@ def save_cleaned_data(cleaned: dict[str, object], raw_folder: str | Path, result
                 sheet_name = _SHEET_NAME_MAP.get(name, name)[:31]
 
                 value.to_excel(writer, sheet_name=sheet_name, index=False)
+
+                ws = writer.book[sheet_name]
+
+                # Filters on header row
+                ws.auto_filter.ref = ws.dimensions
+
+                # Freeze first row
+                ws.freeze_panes = "A2"
+
+                # Adjust column widths
+                for col_idx, column in enumerate(value.columns, start=1):
+                    max_length = len(str(column))
+
+                    for cell in ws[get_column_letter(col_idx)]:
+                        if cell.value is not None:
+                            max_length = max(max_length, len(str(cell.value)))
+
+                    ws.column_dimensions[get_column_letter(col_idx)].width = min(
+                        max_length + 6,
+                        50,  # prevents absurdly wide columns
+                    )
 
                 if re.search(r" \d+$", sheet_name):
                     writer.book[sheet_name].sheet_state = "hidden"

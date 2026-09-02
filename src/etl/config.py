@@ -21,15 +21,8 @@ JOBS_CLOUD = [
     "start_row": 2,
     },
 
-    { # disc_by_desc__disc_by_invoice -> Discount #### ----------
-    "key": "discount by invoice with percentage",
-    "df_cols": ['description', 'qty', 'discount percentage'],
-    "sheet": "Discount",
-    "start_row": 2,
-    },
-
-    { # discount by items -> Discount #### ----------
-    "key": "discount by items",
+    { # finall discount -> Discount #### ----------
+    "key": "final discount",
     "df_cols": ['description', 'qty', 'discount percentage'],
     "sheet": "Discount",
     "start_row": 2,
@@ -140,15 +133,8 @@ JOBS_LOCAL = [
     "start_row": 2,
     },
 
-    { # disc_by_desc__disc_by_invoice -> Discount #### ----------
-    "key": "discount by invoice with percentage",
-    "df_cols": ['description', 'qty', 'discount percentage'],
-    "sheet": "Discount",
-    "start_row": 2,
-    },
-
     { # discount by items -> Discount #### ----------
-    "key": "discount by items",
+    "key": "final discount",
     "df_cols": ['description', 'qty', 'discount percentage'],
     "sheet": "Discount",
     "start_row": 2,
@@ -205,7 +191,7 @@ JOBS_LOCAL = [
 
     { # programming summary inventory -> Unit Cost #### ----------
     "key": "programming summary inventory",
-    "df_cols": ['category','group','product description','qty I F','unit','pur unit','qty pur','inv unit','lbp'],
+    "df_cols": ['category','group','product description','qty i f','unit','pur unit','qty pur','inv unit','lbp'],
     "sheet": "Unit Cost",
     "start_row": 2,
     },

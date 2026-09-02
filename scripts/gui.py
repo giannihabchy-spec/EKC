@@ -23,6 +23,7 @@ from etl.merger import (
 )
 from etl.strip_all import strip_all
 from etl.special_characters import special_char
+from etl.sorter import _sort
 from etl.saver import save_cleaned_data
 from etl.reset_view import reset_workbook_view
 from etl.prev_unit_cost import uc_pre_month
@@ -111,6 +112,7 @@ if st.button("▶ Run Pipeline", type="primary", use_container_width=True):
         cleaned = merge_ib(cleaned)
         cleaned = merge_disc(cleaned)
         cleaned = merge_recipes(cleaned, source)
+        cleaned = _sort(cleaned)
         save_cleaned_data(cleaned, base_folder)
         st.write("Cleaned data is saved.")
         status_clean.update(label="Cleaning", state="complete", expanded=True)

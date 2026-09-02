@@ -110,3 +110,27 @@ def merge_recipes(cleaned: dict, source: str) -> dict:
 
     cleaned["sales items ingredients"] = recipes
     return cleaned
+
+
+def merge_sales_by_items(cleaned: dict, source: str) -> dict:
+
+    sales = cleaned.get("sales by items")
+    if source == 'cloud':
+        sp = cleaned.get("programming summary sales")
+    else:
+        sp = cleaned.get("list sales items")
+
+    if sales is None or sp is None:
+        return cleaned
+
+    sales = sales.merge(
+        sp[['menu items', 'category', 'group']],
+        left_on = 'description',
+        right_on = 'menu items',
+        how = 'left'
+    )[['category', 'group', 'description', 'qty', 'gross sales']]
+
+    sales[['category', 'group']] = sales[['category', 'group']].fillna('not available')
+
+    cleaned["sales by items"] = sales
+    return cleaned

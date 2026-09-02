@@ -19,7 +19,8 @@ from etl.orchestrator import (
 from etl.merger import (
     merge_disc,
     merge_ib,
-    merge_recipes
+    merge_recipes,
+    merge_sales_by_items
 )
 from etl.strip_all import strip_all
 from etl.special_characters import special_char
@@ -112,6 +113,7 @@ if st.button("▶ Run Pipeline", type="primary", use_container_width=True):
         cleaned = merge_ib(cleaned)
         cleaned = merge_disc(cleaned)
         cleaned = merge_recipes(cleaned, source)
+        cleaned = merge_sales_by_items(cleaned)
         cleaned = _sort(cleaned)
         save_cleaned_data(cleaned, base_folder)
         st.write("Cleaned data is saved.")

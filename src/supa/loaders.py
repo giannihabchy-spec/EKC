@@ -251,7 +251,7 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
             first_day = date.to_period("M").start_time
             last_day = (date.to_period("M") + 1).start_time
             waste_query = """
-            SELECT item_name, qty, remarks, date, item_type, location
+            SELECT item_name, qty, remarks, date, item_type, location, created_at
             FROM waste_logs
             WHERE outlet = %s
             AND date >= %s
@@ -261,7 +261,8 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
                 waste_query, 
                 conn, 
                 params = (selected_client, first_day, last_day))
-            waste_df.columns = ['product description', 'qty', 'original remarks', 'date', 'item type', 'location']
+            waste_df.columns = ['product description', 'qty', 'original remarks', 'date', 'item type', 'location', 'created at']
+            waste_df = make_columns_date(waste_df, ['created at'])
 
             data['waste_sales'] = waste_df.loc[waste_df['item type'] == 'Menu Items'].rename(columns = {'product description': 'product'}).drop(columns= 'item type').copy()
             data['waste_inventory'] = waste_df.loc[waste_df['item type'] == 'Inventory'].drop(columns= 'item type').copy()
@@ -272,7 +273,7 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
             first_day = date.to_period("M").end_time - pd.Timedelta(days=3)
             last_day = (date.to_period("M") + 1).start_time + pd.Timedelta(days=4)
             inv_query = """
-            SELECT item_name, quantity, location
+            SELECT category, sub_category, item_name, quantity, location, date, created_at
             FROM inventory_logs
             WHERE outlet = %s
             AND date >= %s
@@ -283,7 +284,8 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
                 conn,
                 params=(selected_client, first_day, last_day)
             )
-            inventory.columns = ['product description', 'qty', 'location']
+            inventory.columns = ['category', 'group', 'product description', 'qty', 'location', 'date', 'created at']
+            inventory = make_columns_date(inventory, ['created at'])
 
             data['inventory'] = inventory
 
@@ -292,7 +294,7 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
             first_day = date.to_period("M").start_time
             last_day = (date.to_period("M") + 1).start_time
             prod_query = """
-            SELECT production_name, actual_yield_qty, location
+            SELECT production_name, actual_yield_qty, location, log_date, created_at
             FROM production_log
             WHERE log_date >= %s
             AND log_date < %s
@@ -303,7 +305,9 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
                 conn,
                 params=(first_day, last_day, branch_id)
             )
-            production.columns = ['production list', 'qty', 'location']
+            production.columns = ['production list', 'qty', 'location', 'date', 'created at']
+            production = make_columns_date(production, ['created at'])
+
             data['production'] = production
 
 
@@ -311,7 +315,7 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
             first_day = date.to_period("M").start_time
             last_day = (date.to_period("M") + 1).start_time
             query = """
-            SELECT location, item_name, base_qty, sub_total, supplier_name, invoice_number, invoice_date, currency
+            SELECT location, item_name, base_qty, sub_total, supplier_name, invoice_number, invoice_date, currency, created_at
             FROM purchase_logs
             WHERE outlet = %s
             AND invoice_date >= %s
@@ -322,7 +326,8 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
                 conn,
                 params=(selected_client, first_day, last_day)
             )
-            purchase.columns = ['location', 'raw materials','qty','total cost','supplier names','invoice #','purchase date', 'currency']
+            purchase.columns = ['location', 'raw materials','qty','total cost','supplier names','invoice #','purchase date', 'currency', 'created at']
+            purchase = make_columns_date(purchase, ['created at'])
 
             if client_currency == 'Usd':
                 purchase.loc[purchase['currency'].str.lower() != client_currency.lower(), 'total cost'] = purchase.loc[purchase['currency'].str.lower() != client_currency.lower(), 'total cost'] / client_rate
@@ -337,7 +342,7 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
             first_day = date.to_period("M").start_time
             last_day = (date.to_period("M") + 1).start_time
             transfers_query = """
-            SELECT from_outlet, from_location, to_outlet, to_location, date, details, status
+            SELECT from_outlet, from_location, to_outlet, to_location, date, details, status, created_at
             FROM transfers
             WHERE date::timestamp >= %s
             AND date::timestamp < %s
@@ -354,8 +359,8 @@ def load_logs(branch_id, selected_client, selected_period, data_choice, client_c
 
             trs = trs.explode('details')
             trs = trs.loc[trs['status'].isin(['Received', 'Received with Issue', 'Direct'])].copy()
-            trs = make_columns_date(trs, ['date'])
-            trs.columns = ['from branch','from location','to branch','to location','date','details','status']
+            trs = make_columns_date(trs, ['date', 'created_at'])
+            trs.columns = ['from branch','from location','to branch','to location','date','details','status', 'created at']
             trs['product'] = trs['details'].apply(lambda x: x.get('item_name'))
             trs['qty'] = trs['details'].apply(lambda x: x.get('received_qty'))
             trs['requested qty'] = trs['details'].apply(lambda x: x.get('requested_qty'))

@@ -19,5 +19,6 @@ from . import (
     inventory_items_ingredients_qtp,
     sales_by_category,
     sales_summary_of_sales_by_customer_by_item,
-    daily_sales_by_group
+    daily_sales_by_group,
+    sales_items_by_transactions
 )

@@ -28,8 +28,8 @@ cleaner_by_code = {
         "rep_s_00191_rows.xlsx": ("sales by items", cloud.sales_by_items.preprocess),
         "rep_s_00438.xlsx": ("discount by description by employee", cloud.discount_by_description_by_employee.preprocess),
         "rep_hs_0006.xlsx": ("sales by category", cloud.sales_by_category.preprocess),
-        "REP_S_00155.xlsx": ("daily sales by group", cloud.daily_sales_by_group.preprocess)
-
+        "REP_S_00155.xlsx": ("daily sales by group", cloud.daily_sales_by_group.preprocess),
+        "REP_S_00175.xlsx": ("sales items by transactions", cloud.sales_items_by_transactions.preprocess),
     },
 
     'local' : {

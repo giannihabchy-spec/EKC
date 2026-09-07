@@ -2,6 +2,11 @@ import xlwings as xw
 from pathlib import Path
 import streamlit as st
 
+sheets_to_exclude = [
+    'Dashboard',
+    'Rep. COGS',
+]
+
 def workbook_is_open(wb_path):
     target = Path(wb_path).resolve()
 
@@ -32,26 +37,28 @@ def reset_workbook_view(wb_path: str) -> None:
         wb = app.books.open(wb_path)
 
         for sht in wb.sheets:
-            api = sht.api
+            if sht.name not in sheets_to_exclude:
 
-            try:
-                if api.FilterMode:
-                    api.ShowAllData()
-            except Exception:
-                pass
-            try:
-                api.AutoFilterMode = False
-            except Exception:
-                pass
+                api = sht.api
 
-            try:
-                api.Columns.Hidden = False
-            except Exception:
-                pass
-            try:
-                api.Rows.Hidden = False
-            except Exception:
-                pass
+                try:
+                    if api.FilterMode:
+                        api.ShowAllData()
+                except Exception:
+                    pass
+                try:
+                    api.AutoFilterMode = False
+                except Exception:
+                    pass
+
+                try:
+                    api.Columns.Hidden = False
+                except Exception:
+                    pass
+                try:
+                    api.Rows.Hidden = False
+                except Exception:
+                    pass
 
         wb.save()
     finally:

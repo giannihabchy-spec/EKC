@@ -437,7 +437,7 @@ def get_last_report_date(branch_id, selected_client):
             cur.execute(
                 """
                 select max(report_date)
-                from ac_discount_category
+                from ac_variance
                 where branch_id = %s;
                 """
                 , (branch_id,)

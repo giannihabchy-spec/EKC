@@ -66,49 +66,52 @@ def write_master(
 
             start_row = int(job["start_row"])
 
-# New last row indentifying:
+# last row indentifying by col:
 # men hon
-            identifier_col = last_row_identifier[job["sheet"]]
-            if identifier_col is None:
-                log_func(
-                    f"⚠️ No last-row identifier configured for '{job['sheet']}'"
-                )
-                continue
+            # identifier_col = last_row_identifier[job["sheet"]]
+            # if identifier_col is None:
+            #     log_func(
+            #         f"⚠️ No last-row identifier configured for '{job['sheet']}'"
+            #     )
+            #     continue
 
-            try:
-                identifier_index = df_cols.index(identifier_col)
-            except ValueError:
-                log_func(
-                    f"⚠️ {job['sheet']} last-row identifier "
-                    f"'{identifier_col}' not found in df_cols"
-                )
-                continue
+            # try:
+            #     identifier_index = df_cols.index(identifier_col)
+            # except ValueError:
+            #     log_func(
+            #         f"⚠️ {job['sheet']} last-row identifier "
+            #         f"'{identifier_col}' not found in df_cols"
+            #     )
+            #     continue
 
-            excel_identifier_col = excel_cols[identifier_index]
+            # excel_identifier_col = excel_cols[identifier_index]
 
-            last_row = sht.range(
-                f"{excel_identifier_col}{sht.cells.last_cell.row}"
-            ).end("up").row
+            # last_row = sht.range(
+            #     f"{excel_identifier_col}{sht.cells.last_cell.row}"
+            # ).end("up").row
 
-            write_row = (
-                start_row
-                if last_row < start_row
-                else last_row + 1
-            )
+            # write_row = (
+            #     start_row
+            #     if last_row < start_row
+            #     else last_row + 1
+            # )
 # la hon
 
-            # last_row = start_row - 1
-            # bottom = sht.cells.last_cell.row
+# last row indentifying by col:
+# men hon
+            last_row = start_row - 1
+            bottom = sht.cells.last_cell.row
 
-            # for col in excel_cols:
-            #     vals = sht.range(f"{col}{start_row}:{col}{bottom}").value
-            #     if not vals:
-            #         continue
-            #     for i, v in enumerate(vals):
-            #         if v not in (None, ""):
-            #             last_row = max(last_row, start_row + i)
+            for col in excel_cols:
+                vals = sht.range(f"{col}{start_row}:{col}{bottom}").value
+                if not vals:
+                    continue
+                for i, v in enumerate(vals):
+                    if v not in (None, ""):
+                        last_row = max(last_row, start_row + i)
 
-            # write_row = start_row if last_row < start_row else last_row + 1
+            write_row = start_row if last_row < start_row else last_row + 1
+# la hon
 
             for col_name, excel_col in zip(df_cols, excel_cols):
                 rng = f"{excel_col}{write_row}"

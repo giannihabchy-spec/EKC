@@ -1,6 +1,30 @@
 import pandas as pd
 import xlwings as xw
 
+
+last_row_identifier = {
+    'Beg': "product description",
+    'Disc. Cat.': "category",
+    'Discount': "description",
+    'Ending': "product description",
+    'IN OUT': "product",
+    'PRD': "production list",
+    'Purchase': "raw materials",
+    'Recipes': "menu items",
+    'SP': "menu items",
+    'Sales': "description",
+    'Unit Cost': "product description",
+    'W.Inv': "product description",
+    'W.Sal': "product",
+    'sub recipes': "production name",
+    'Rep.M.Eng.': "menu items",
+    'Rep.M.Mix': "menu items",
+    'Rep.Theo': "menu items",
+    'Rep. Variance': "products",
+    # 'UC PRE MONTH': "",
+}
+
+
 def write_master(
     master_path: str,
     cleaned: dict[str, pd.DataFrame],
@@ -25,7 +49,7 @@ def write_master(
                     log_func(f"⚠️ {job.get('key','?')} not available")
                 continue
 
-            log_func(f"{job.get("key")} -> {job.get("sheet")}")
+            log_func(f"{job.get('key')} -> {job.get('sheet')}")
 
             df_cols = list(job["df_cols"])
             excel_cols = list(job["excel_cols"])
@@ -42,18 +66,49 @@ def write_master(
 
             start_row = int(job["start_row"])
 
-            last_row = start_row - 1
-            bottom = sht.cells.last_cell.row
+# New last row indentifying:
+# men hon
+            identifier_col = last_row_identifier[job["sheet"]]
+            if identifier_col is None:
+                log_func(
+                    f"⚠️ No last-row identifier configured for '{job['sheet']}'"
+                )
+                continue
 
-            for col in excel_cols:
-                vals = sht.range(f"{col}{start_row}:{col}{bottom}").value
-                if not vals:
-                    continue
-                for i, v in enumerate(vals):
-                    if v not in (None, ""):
-                        last_row = max(last_row, start_row + i)
+            try:
+                identifier_index = df_cols.index(identifier_col)
+            except ValueError:
+                log_func(
+                    f"⚠️ {job['sheet']} last-row identifier "
+                    f"'{identifier_col}' not found in df_cols"
+                )
+                continue
 
-            write_row = start_row if last_row < start_row else last_row + 1
+            excel_identifier_col = excel_cols[identifier_index]
+
+            last_row = sht.range(
+                f"{excel_identifier_col}{sht.cells.last_cell.row}"
+            ).end("up").row
+
+            write_row = (
+                start_row
+                if last_row < start_row
+                else last_row + 1
+            )
+# la hon
+
+            # last_row = start_row - 1
+            # bottom = sht.cells.last_cell.row
+
+            # for col in excel_cols:
+            #     vals = sht.range(f"{col}{start_row}:{col}{bottom}").value
+            #     if not vals:
+            #         continue
+            #     for i, v in enumerate(vals):
+            #         if v not in (None, ""):
+            #             last_row = max(last_row, start_row + i)
+
+            # write_row = start_row if last_row < start_row else last_row + 1
 
             for col_name, excel_col in zip(df_cols, excel_cols):
                 rng = f"{excel_col}{write_row}"

@@ -138,6 +138,8 @@ if st.button("▶ Run Pipeline", type="primary", use_container_width=True):
             ex_res = extract_sheets(master_path, jobs, cleaned)
             jobs = ex_res['jobs']
             cleaned = ex_res['cleaned_dict']
+            cleaned = strip_all(cleaned)
+            cleaned = special_char(cleaned)
             st.write("Completed")
             status_ex.update(label="Extracting sheets", state="complete", expanded=True)
 

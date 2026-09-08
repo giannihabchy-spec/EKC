@@ -27,8 +27,6 @@ def require_latest_code():
                 "You must pull the latest changes before using EKC Tools."
             )
 
-            st.code("git pull origin master", language="bash")
-
             st.stop()
 
     except Exception as e:

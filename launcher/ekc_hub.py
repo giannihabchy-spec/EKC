@@ -11,4 +11,4 @@ require_latest_code()
 
 st.title("EKC Tools")
 st.markdown("Use the **sidebar** to switch between apps.")
-st.markdown("---")
+st.markdown("---")     

@@ -11,6 +11,7 @@ st.set_page_config(
 
 sys.path.append(str(Path(__file__).parent / "src"))
 
+from github.check_updates import require_latest_code
 from etl.config import get_jobs
 from etl.orchestrator import (
     clean_folder,
@@ -54,6 +55,8 @@ warnings.filterwarnings(
 
 st.title("Auto Calc Pipeline")
 st.markdown("---")
+
+require_latest_code()
 
 col1, col2, col3 = st.columns(3)
 with col1:

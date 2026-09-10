@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 from supa.db import _ensure_supa_env_from_secrets
+from github.check_updates import require_latest_code
 
 st.set_page_config(
     page_title="Push to Database",
@@ -52,6 +53,8 @@ supabase = st.session_state.ptdb_supabase_client
 
 st.title("Push to Database")
 st.markdown("---")
+
+require_latest_code()
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:

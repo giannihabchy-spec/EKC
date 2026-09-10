@@ -8,6 +8,7 @@ import streamlit as st
 from supa.streamlit_functions import get_client_list_for_daily_sales
 from supa.db import get_branch_id, get_pg_connection
 from supa.loaders import push_sheets
+from github.check_updates import require_latest_code
 
 
 st.set_page_config(
@@ -17,6 +18,8 @@ st.set_page_config(
 )
 st.title("Forecast Sales")
 st.markdown("---")
+
+require_latest_code()
 
 single_models = list(MODEL_REGISTRY.keys())
 

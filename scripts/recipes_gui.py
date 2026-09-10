@@ -2,6 +2,7 @@ import streamlit as st
 import sys
 from pathlib import Path
 import warnings
+from github.check_updates import require_latest_code
 
 st.set_page_config(
     page_title="Recipes",
@@ -30,6 +31,8 @@ warnings.filterwarnings(
 
 st.title("Recipes: Omega vs Auto Calc")
 st.markdown("---")
+
+require_latest_code()
 
 
 folder_input = st.text_input("📁 Target Folder Path", placeholder="C:/Path/To/Folder")

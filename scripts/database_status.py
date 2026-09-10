@@ -1,5 +1,6 @@
 import streamlit as st
 from supa.db import _ensure_supa_env_from_secrets
+from github.check_updates import require_latest_code
 
 st.set_page_config(
     page_title="Database Status",
@@ -24,6 +25,8 @@ supabase = st.session_state.ptdb_supabase_client
 
 st.title("Database Status")
 st.markdown("---")
+
+require_latest_code()
 
 col1 = st.columns(1)[0]
 with col1:

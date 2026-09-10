@@ -4,6 +4,7 @@ from pathlib import Path
 import warnings
 import pandas as pd
 from supa.db import _ensure_supa_env_from_secrets
+from github.check_updates import require_latest_code
 
 st.set_page_config(
     page_title="Quick Variance",
@@ -58,6 +59,8 @@ warnings.filterwarnings(
 
 st.title("Quick Variance")
 st.markdown("---")
+
+require_latest_code()
 
 
 if "ptdb_supabase_client" not in st.session_state:

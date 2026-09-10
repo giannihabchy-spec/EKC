@@ -1,6 +1,8 @@
 import importlib                                    
 import streamlit as st
 from pathlib import Path
+
+from github.check_updates import require_latest_code
 from ml.validators import (
     validate_omega_name,
     find_existing_data,
@@ -56,6 +58,8 @@ st.set_page_config(
 
 st.title("Preprocess Single File")
 st.markdown("---")
+
+require_latest_code()
 
 col1, col2, col3, col4 = st.columns(4) # , col5, col6
 with col1:

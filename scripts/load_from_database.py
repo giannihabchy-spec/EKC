@@ -10,6 +10,7 @@ st.set_page_config(
 
 _ensure_supa_env_from_secrets()
 
+from github.check_updates import require_latest_code
 from etl.special_characters import special_char
 from etl.strip_all import strip_all
 from etl.saver import save_cleaned_data
@@ -55,6 +56,8 @@ supabase = st.session_state.ptdb_supabase_client
 
 st.title("Load From Database")
 st.markdown("---")
+
+require_latest_code()
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:

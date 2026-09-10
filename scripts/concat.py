@@ -1,6 +1,7 @@
 import importlib                                    
 import streamlit as st
 from pathlib import Path
+from github.check_updates import require_latest_code
 from ml.ops.concat import concat_files
 from ml.validators import (
     validate_omega_name,
@@ -58,6 +59,8 @@ st.set_page_config(
 
 st.title("Concat")
 st.markdown("---")
+
+require_latest_code()
 
 col1, col2, col3 = st.columns(3)
 with col1:

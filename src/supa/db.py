@@ -452,3 +452,75 @@ def get_last_report_date(branch_id, selected_client):
 
     finally:
         conn.close()
+
+
+def get_pushed_outlets(selected_period):
+    excluded_outlets = [
+        'A',
+        'B',
+        'Loubnane',
+        'Foodie CK',
+        'Foodie Gourmet',
+        'Kfarnis',
+        'Soprano',
+        'Tint Lobby',
+        'Akwa',
+    ]
+
+    conn = get_pg_connection()
+
+    try:
+        date = pd.to_datetime(selected_period).to_period("M").start_time
+
+        ids_query = """
+        SELECT distinct branch_id
+        FROM ac_variance
+        WHERE report_date = %s
+        """
+        data = pd.read_sql(
+            ids_query, 
+            conn, 
+            params = (date,)
+        )
+        ids = list(data['branch_id'])
+
+        if ids:
+            placeholders = ",".join(["%s"] * len(ids))
+
+            outlets_query = f"""
+            SELECT outlet
+            FROM branches
+            WHERE id in ({placeholders})
+            """
+            pushed_outlets = pd.read_sql(
+                outlets_query, 
+                conn, 
+                params=tuple(ids)
+            )
+            pushed_outlets = list(pushed_outlets['outlet'])
+            pushed_outlets = [i for i in pushed_outlets if i not in excluded_outlets]
+
+        else:
+            pushed_outlets = []
+
+        all_outlets_query = """
+        SELECT distinct outlet
+        FROM branches
+        """
+        all_outlets = pd.read_sql(
+            all_outlets_query, 
+            conn, 
+        )
+        all_outlets = list(all_outlets['outlet'])
+        all_outlets = [i for i in all_outlets if i not in excluded_outlets]
+        pending_outlets = [i for i in all_outlets if i not in pushed_outlets]
+
+        return {
+            'all': all_outlets,
+            'pushed': pushed_outlets,
+            'pending': pending_outlets
+        }
+
+    finally:
+        conn.close()
+

@@ -133,7 +133,7 @@ JOBS_LOCAL = [
     "start_row": 2,
     },
 
-    { # discount by items -> Discount #### ----------
+    { # finall discount -> Discount #### ----------
     "key": "final discount",
     "df_cols": ['description', 'qty', 'discount percentage'],
     "sheet": "Discount",

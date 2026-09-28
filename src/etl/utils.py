@@ -173,4 +173,15 @@ def get_from_to_date_2(data, from_loc: tuple[int, int] = (0, 0), to_loc: tuple[i
 
 
 def validate_from_to_date(from_date, to_date):
-    st.write(from_date, to_date)
+
+    if from_date.year != to_date.year:
+        st.error(f"⚠️ Year Mismatch: From Year {from_date.year} to Year {to_date.year}.")
+
+    if from_date.month != to_date.month:
+        st.error(f"⚠️ Month Mismatch: From Month {from_date.month} to Month {to_date.month}.")
+
+    if from_date.day != 1:
+        st.error(f"⚠️ The file does not begin on the first day of the month. From date: {from_date.day}-{from_date.month}.")
+
+    if to_date.day != to_date.days_in_month:
+        st.error(f"⚠️ The file does not end at the end of the month. To date: {to_date.day}-{to_date.month}.")

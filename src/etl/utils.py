@@ -1,4 +1,5 @@
 import pandas as pd
+import streamlit as st
 
 def read(path, header = None):
     return pd.read_excel(path, header = header)
@@ -144,3 +145,32 @@ def get_file_date(data, loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
         file_date = data.iloc[row, col]
 
     return file_date
+
+
+def get_from_to_date_1(data, loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
+    row, col = loc
+
+    if source == 'cloud':
+        date = data.iloc[row, col]
+        from_date = pd.to_datetime(date.split()[2])
+        to_date = pd.to_datetime(date.split()[5])
+
+    return from_date, to_date
+
+
+def get_from_to_date_2(data, from_loc: tuple[int, int] = (0, 0), to_loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
+    from_row, from_col = from_loc
+    to_row, to_col = to_loc
+
+    if source == 'cloud':
+        from_date_str = data.iloc[from_row, from_col]
+        to_date_str = data.iloc[to_row, to_col]
+
+        from_date = pd.to_datetime(from_date_str.split()[2])
+        to_date = pd.to_datetime(to_date_str.split()[2])
+
+    return from_date, to_date
+
+
+def validate_from_to_date(from_date, to_date):
+    st.write(from_date, to_date)

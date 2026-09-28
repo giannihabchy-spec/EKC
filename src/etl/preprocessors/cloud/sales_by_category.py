@@ -1,15 +1,23 @@
-from etl.utils import read
-from etl.utils import keep_cols_by_index
-from etl.utils import drop_na_by_name
-from etl.utils import drop_rows
-from etl.utils import make_columns_numeric
-from etl.utils import get_file_date
-from etl.utils import get_omega_client_name
+from etl.utils import (
+    read,
+    keep_cols_by_index,
+    drop_na_by_name,
+    drop_rows,
+    make_columns_numeric,
+    get_file_date,
+    get_from_to_date_1,
+    validate_from_to_date,
+    get_omega_client_name
+)
+
 
 
 def preprocess(path, omega_loc: bool = False):
     data = read(path)
 
+    from_date, to_date = get_from_to_date_1(data, (2,2))
+    validate_from_to_date(from_date, to_date)
+    
     if omega_loc:
         omega_client = get_omega_client_name(data)
         file_date = get_file_date(data, (2,2))

@@ -7,10 +7,14 @@ from etl.utils import drop_rows
 from etl.utils import make_columns_numeric
 from etl.utils import drop_na_by_name
 from etl.utils import clean_check
+from etl.utils import get_from_to_date_c2
 
 
 def preprocess(path):
     data = read(path)
+
+    get_from_to_date_c2(data, (13,5), (13,7), 'local')
+
     data = keep_cols_by_index(data,[0,7,8])
     data.columns = ['Check', 'Discount', 'Amount']
     data = remove_repeated_headers(data,'Discount')

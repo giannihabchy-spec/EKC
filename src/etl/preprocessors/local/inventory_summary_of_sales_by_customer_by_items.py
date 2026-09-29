@@ -5,10 +5,13 @@ from etl.utils import remove_repeated_headers
 from etl.utils import make_columns_date
 from etl.utils import make_columns_numeric
 from etl.utils import get_omega_client_name, get_file_date
+from etl.utils import get_from_to_date_c2
 
 
 def preprocess(path, omega_loc: bool = False):
     data = read(path)
+
+    get_from_to_date_c2(data, (11,4), (11,6), 'local')
 
     if omega_loc:
         omega_client = get_omega_client_name(data, (2,0))

@@ -4,10 +4,14 @@ from etl.utils import drop_na_by_name
 from etl.utils import remove_repeated_headers
 from etl.utils import make_columns_date
 from etl.utils import make_columns_numeric
+from etl.utils import get_from_to_date_c2
 
 
 def preprocess(path):
     data = read(path)
+
+    get_from_to_date_c2(data, (11,4), (11,7), 'local')
+
     data = keep_cols_by_index(data,[0,1,4,6])
     data.columns = ['Date', 'Location Description', 'Qty', 'Product Description']
     data = drop_na_by_name(data,['Location Description'])

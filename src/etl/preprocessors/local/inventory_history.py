@@ -1,10 +1,17 @@
+import pandas as pd
 from etl.utils import read
 from etl.utils import keep_cols_by_index
 from etl.utils import make_columns_numeric
+from etl.utils import validate_from_to_date
 
 
 def preprocess(path):
     data = read(path)
+
+    to_date = pd.to_datetime(data.iloc[10,5])
+    from_date = to_date.replace(day=1)
+    validate_from_to_date(from_date, to_date)
+
     data = keep_cols_by_index(data,[2,4,5])
     data.columns = ['desc','loc','qty']
     loc_ids = data[data['loc']=='Location :'].index

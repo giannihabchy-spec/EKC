@@ -161,8 +161,6 @@ def validate_from_to_date(from_date, to_date):
     if to_date.day != to_date.days_in_month:
         st.error(f"⚠️ The file does not end at the end of the month. To date: {to_date.day}-{to_date.month}.")
 
-    st.write(from_date, to_date)
-
 
 def get_from_to_date_c1(data, loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
     row, col = loc
@@ -185,5 +183,9 @@ def get_from_to_date_c2(data, from_loc: tuple[int, int] = (0, 0), to_loc: tuple[
 
         from_date = pd.to_datetime(from_date_str.split()[2])
         to_date = pd.to_datetime(to_date_str.split()[2])
+
+    else:
+        from_date = pd.to_datetime(data.iloc[from_row, from_col])
+        to_date = pd.to_datetime(data.iloc[to_row, to_col])
 
     validate_from_to_date(from_date, to_date)

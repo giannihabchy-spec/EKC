@@ -3,12 +3,12 @@ from etl.utils import read
 from etl.utils import keep_cols_by_index
 from etl.utils import drop_na_by_name
 from etl.utils import make_columns_numeric
-from etl.utils import get_from_to_date_c1
+from etl.utils import get_from_to_date_1
 
 def preprocess(path):
     data = read(path)
 
-    get_from_to_date_c1(data, (2,2))
+    get_from_to_date_1(data, (2,2))
 
     data = data.iloc[:,[1,-3]].copy()
     data.columns = ['category', 'total']

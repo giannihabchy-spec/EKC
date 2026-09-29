@@ -5,13 +5,13 @@ from etl.utils import keep_cols_by_index
 from etl.utils import remove_repeated_headers
 from etl.utils import make_columns_date
 from etl.utils import make_columns_numeric
-from etl.utils import get_from_to_date_c2
+from etl.utils import get_from_to_date_2
 
 
 def preprocess(path):
     data = read(path)
 
-    get_from_to_date_c2(data, (11,4), (11,6), 'local')
+    get_from_to_date_2(data, (11,4), (11,6), 'local')
 
     data = keep_cols_by_index(data,[0, 2, 3, 4, 5, 6, 8])
     data.columns = ['From Location','From Branch','To Location','To Branch','Date','Product','Qty']

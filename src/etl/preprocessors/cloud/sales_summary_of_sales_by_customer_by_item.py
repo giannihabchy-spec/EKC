@@ -7,13 +7,13 @@ from etl.utils import (
     make_columns_date,
     get_file_date,
     get_omega_client_name,
-    get_from_to_date_c1
+    get_from_to_date_1
 )
 
 def preprocess(path, omega_loc: bool = False):
     data = read(path)
 
-    get_from_to_date_c1(data, (3,1))
+    get_from_to_date_1(data, (3,1))
 
     if omega_loc:
         omega_client = get_omega_client_name(data)

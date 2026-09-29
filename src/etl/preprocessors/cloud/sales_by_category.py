@@ -9,7 +9,7 @@ from etl.utils import (
     get_omega_client_name
 )
 
-
+file_code = 'rep_hs_0006'
 
 def preprocess(path, omega_loc: bool = False):
     data = read(path)

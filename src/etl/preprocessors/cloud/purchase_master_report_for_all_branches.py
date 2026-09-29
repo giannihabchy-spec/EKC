@@ -8,6 +8,7 @@ from etl.utils import make_columns_date, make_columns_numeric
 from etl.utils import get_omega_client_name, get_file_date
 from etl.utils import get_from_to_date_1
 
+file_code = 'REP_I_00462'
 
 def preprocess(path, omega_loc: bool = False):
     data = read(path)

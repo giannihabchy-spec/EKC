@@ -5,6 +5,7 @@ from etl.utils import drop_na_by_name
 from etl.utils import drop_rows
 from etl.utils import make_columns_numeric
 
+file_code = 'rep_s_00188'
 
 def preprocess(path):
     data = read(path)

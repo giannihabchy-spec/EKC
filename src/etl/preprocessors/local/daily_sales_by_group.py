@@ -7,6 +7,7 @@ from etl.utils import (
     make_columns_date
 )
 
+file_code = 'rep_s_00155'
 
 def preprocess(path, omega_loc: bool = False):
     data = read(path)

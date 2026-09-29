@@ -23,7 +23,7 @@ for key in ["url", "key", "host", "port", "name", "user", "password"]:
         os.environ[key] = str(secrets[key])  
 supabase = supabase_init(secrets["url"], secrets["key"])
 
-
+file_code = 'REP_S_00155.xlsx'
 
 def preprocess(path, omega_loc: bool = False):
     data = read(path)

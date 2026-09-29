@@ -6,6 +6,7 @@ from etl.utils import drop_na_by_name
 from etl.utils import make_columns_date, make_columns_numeric
 from etl.utils import get_from_to_date_1
 
+file_code = 'REP_I_0024'
 
 def preprocess(path):
     data = read(path)

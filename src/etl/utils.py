@@ -150,10 +150,6 @@ def get_file_date(data, loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
 
 
 def validate_from_to_date(from_date, to_date):
-    frame = inspect.currentframe()
-    caller_frame = frame.f_back
-
-    caller_file = Path(caller_frame.f_code.co_filename).name
 
     if from_date.year != to_date.year:
         st.error(f"⚠️ Year Mismatch: From Year {from_date.year} to Year {to_date.year}.")
@@ -166,8 +162,6 @@ def validate_from_to_date(from_date, to_date):
 
     if to_date.day != to_date.days_in_month:
         st.error(f"⚠️ The file does not end at the end of the month. To date: {to_date.day}-{to_date.month}.")
-
-    st.write(caller_file)
 
 
 def get_from_to_date_1(data, loc: tuple[int, int] = (0, 0), source: str = 'cloud'):

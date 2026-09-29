@@ -9,6 +9,7 @@ from etl.utils import remove_repeated_headers
 from etl.utils import make_columns_numeric
 from etl.utils import validate_from_to_date
 
+file_code = 'REP_I_0033_rows'
 
 def preprocess(path):
     data = read(path)

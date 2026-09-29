@@ -10,7 +10,6 @@ from . import (
     requisition_summary,
     requisition_summary_IB,
     sales_by_items,
-    sales_item_by_transaction,
     sales_item_wastage,
     sales_items_ingredients,
     summary_of_sales_by_customer_by_item,

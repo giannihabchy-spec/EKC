@@ -11,7 +11,7 @@ file_code = 'rep_i_0024'
 def preprocess(path):
     data = read(path)
 
-    get_from_to_date_2(data, (11,4), (11,7), 'local')
+    get_from_to_date_2(data, file_code, (11,4), (11,7), 'local')
 
     data = keep_cols_by_index(data,[0,1,4,6])
     data.columns = ['Date', 'Location Description', 'Qty', 'Product Description']

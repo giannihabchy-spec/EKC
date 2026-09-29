@@ -13,7 +13,7 @@ file_code = 'REP_I_00023D_rows'
 def preprocess(path, omega_loc: bool = False):
     data = read(path)
 
-    get_from_to_date_2(data, (3,3), (3,8))
+    get_from_to_date_2(data, file_code, (3,3), (3,8))
 
     if omega_loc:
         omega_client = get_omega_client_name(data)

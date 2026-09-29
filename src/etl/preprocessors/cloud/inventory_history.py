@@ -16,7 +16,7 @@ def preprocess(path):
 
     to_date = pd.to_datetime(data.iloc[2,1].split()[2].replace(':',''))
     from_date = to_date.replace(day=1)
-    validate_from_to_date(from_date, to_date)
+    validate_from_to_date(from_date, to_date, file_code)
 
     data = keep_cols_by_index(data,[1,2,9])
     data.columns = ['product description','qty','location']

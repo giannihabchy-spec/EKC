@@ -11,7 +11,7 @@ def preprocess(path):
 
     to_date = pd.to_datetime(data.iloc[10,5])
     from_date = to_date.replace(day=1)
-    validate_from_to_date(from_date, to_date)
+    validate_from_to_date(from_date, to_date, file_code)
 
     data = keep_cols_by_index(data,[2,4,5])
     data.columns = ['desc','loc','qty']

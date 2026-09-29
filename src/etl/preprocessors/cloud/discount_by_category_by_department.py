@@ -10,7 +10,7 @@ file_code = 'rep_s_00161.xlsx'
 def preprocess(path):
     data = read(path)
 
-    get_from_to_date_1(data, (2,2))
+    get_from_to_date_1(data, file_code, (2,2))
 
     data = data.iloc[:,[1,-3]].copy()
     data.columns = ['category', 'total']

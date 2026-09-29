@@ -151,19 +151,17 @@ def get_file_date(data, loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
 
 def validate_from_to_date(from_date, to_date, file_code):
 
-    # if from_date.year != to_date.year:
-    #     st.error(f"⚠️ {file_code}: Year Mismatch: From Year {from_date.year} to Year {to_date.year}.")
+    if from_date.year != to_date.year:
+        st.error(f"⚠️ {file_code}: Year Mismatch: From Year {from_date.year} to Year {to_date.year}.")
 
-    # if from_date.month != to_date.month:
-    #     st.error(f"⚠️ {file_code}: Month Mismatch: From Month {from_date.month} to Month {to_date.month}.")
+    if from_date.month != to_date.month:
+        st.error(f"⚠️ {file_code}: Month Mismatch: From Month {from_date.month} to Month {to_date.month}.")
 
-    # if from_date.day != 1:
-    #     st.error(f"⚠️ {file_code}: The file does not begin on the first day of the month. From date: {from_date.day}-{from_date.month}.")
+    if from_date.day != 1:
+        st.error(f"⚠️ {file_code}: The file does not begin on the first day of the month. From date: {from_date.day}-{from_date.month}.")
 
-    # if to_date.day != to_date.days_in_month:
-    #     st.error(f"⚠️ {file_code}: The file does not end at the end of the month. To date: {to_date.day}-{to_date.month}.")
-
-    st.write(file_code, from_date, to_date)
+    if to_date.day != to_date.days_in_month:
+        st.error(f"⚠️ {file_code}: The file does not end at the end of the month. To date: {to_date.day}-{to_date.month}.")
 
 
 def get_from_to_date_1(data, file_code: str, loc: tuple[int, int] = (0, 0), source: str = 'cloud'):

@@ -5,8 +5,7 @@ from etl.utils import (
     drop_rows,
     make_columns_numeric,
     get_file_date,
-    get_from_to_date_1,
-    validate_from_to_date,
+    get_from_to_date_c1,
     get_omega_client_name
 )
 
@@ -15,8 +14,7 @@ from etl.utils import (
 def preprocess(path, omega_loc: bool = False):
     data = read(path)
 
-    from_date, to_date = get_from_to_date_1(data, (2,2))
-    validate_from_to_date(from_date, to_date)
+    get_from_to_date_c1(data, (2,2))
     
     if omega_loc:
         omega_client = get_omega_client_name(data)

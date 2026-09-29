@@ -6,14 +6,13 @@ from etl.utils import drop_na_by_name
 from etl.utils import remove_repeated_headers
 from etl.utils import make_columns_date, make_columns_numeric
 from etl.utils import get_omega_client_name, get_file_date
-from etl.utils import get_from_to_date_1, validate_from_to_date
+from etl.utils import get_from_to_date_c1
 
 
 def preprocess(path, omega_loc: bool = False):
     data = read(path)
 
-    from_date, to_date = get_from_to_date_1(data, (3,3))
-    validate_from_to_date(from_date, to_date)
+    get_from_to_date_c1(data, (3,3))
 
     if omega_loc:
         omega_client = get_omega_client_name(data)

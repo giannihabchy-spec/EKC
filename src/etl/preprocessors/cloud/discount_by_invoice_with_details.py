@@ -5,14 +5,13 @@ from etl.utils import drop_rows
 from etl.utils import remove_repeated_headers
 from etl.utils import make_columns_numeric
 from etl.utils import clean_check
-from etl.utils import get_from_to_date_1, validate_from_to_date
+from etl.utils import get_from_to_date_c1
 
 
 def preprocess(path):
     data = read(path)
 
-    from_date, to_date = get_from_to_date_1(data, (2,5))
-    validate_from_to_date(from_date, to_date)
+    get_from_to_date_c1(data, (2,5))
 
     data = keep_cols_by_index(data,[2,4,10])
     data.columns = ['Description', 'Check', 'QTY']

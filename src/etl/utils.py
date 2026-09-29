@@ -147,31 +147,6 @@ def get_file_date(data, loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
     return file_date
 
 
-def get_from_to_date_1(data, loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
-    row, col = loc
-
-    if source == 'cloud':
-        date = data.iloc[row, col]
-        from_date = pd.to_datetime(date.split()[2])
-        to_date = pd.to_datetime(date.split()[5])
-
-    return from_date, to_date
-
-
-def get_from_to_date_2(data, from_loc: tuple[int, int] = (0, 0), to_loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
-    from_row, from_col = from_loc
-    to_row, to_col = to_loc
-
-    if source == 'cloud':
-        from_date_str = data.iloc[from_row, from_col]
-        to_date_str = data.iloc[to_row, to_col]
-
-        from_date = pd.to_datetime(from_date_str.split()[2])
-        to_date = pd.to_datetime(to_date_str.split()[2])
-
-    return from_date, to_date
-
-
 def validate_from_to_date(from_date, to_date):
 
     if from_date.year != to_date.year:
@@ -185,3 +160,30 @@ def validate_from_to_date(from_date, to_date):
 
     if to_date.day != to_date.days_in_month:
         st.error(f"⚠️ The file does not end at the end of the month. To date: {to_date.day}-{to_date.month}.")
+
+    st.write(from_date, to_date)
+
+
+def get_from_to_date_c1(data, loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
+    row, col = loc
+
+    if source == 'cloud':
+        date = data.iloc[row, col]
+        from_date = pd.to_datetime(date.split()[2])
+        to_date = pd.to_datetime(date.split()[5])
+
+    validate_from_to_date(from_date, to_date)
+
+
+def get_from_to_date_c2(data, from_loc: tuple[int, int] = (0, 0), to_loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
+    from_row, from_col = from_loc
+    to_row, to_col = to_loc
+
+    if source == 'cloud':
+        from_date_str = data.iloc[from_row, from_col]
+        to_date_str = data.iloc[to_row, to_col]
+
+        from_date = pd.to_datetime(from_date_str.split()[2])
+        to_date = pd.to_datetime(to_date_str.split()[2])
+
+    validate_from_to_date(from_date, to_date)

@@ -149,22 +149,24 @@ def get_file_date(data, loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
     return file_date
 
 
-def validate_from_to_date(from_date, to_date):
+def validate_from_to_date(from_date, to_date, file_code):
 
-    if from_date.year != to_date.year:
-        st.error(f"⚠️ Year Mismatch: From Year {from_date.year} to Year {to_date.year}.")
+    # if from_date.year != to_date.year:
+    #     st.error(f"⚠️ {file_code}: Year Mismatch: From Year {from_date.year} to Year {to_date.year}.")
 
-    if from_date.month != to_date.month:
-        st.error(f"⚠️ Month Mismatch: From Month {from_date.month} to Month {to_date.month}.")
+    # if from_date.month != to_date.month:
+    #     st.error(f"⚠️ {file_code}: Month Mismatch: From Month {from_date.month} to Month {to_date.month}.")
 
-    if from_date.day != 1:
-        st.error(f"⚠️ The file does not begin on the first day of the month. From date: {from_date.day}-{from_date.month}.")
+    # if from_date.day != 1:
+    #     st.error(f"⚠️ {file_code}: The file does not begin on the first day of the month. From date: {from_date.day}-{from_date.month}.")
 
-    if to_date.day != to_date.days_in_month:
-        st.error(f"⚠️ The file does not end at the end of the month. To date: {to_date.day}-{to_date.month}.")
+    # if to_date.day != to_date.days_in_month:
+    #     st.error(f"⚠️ {file_code}: The file does not end at the end of the month. To date: {to_date.day}-{to_date.month}.")
+
+    st.write(file_code, from_date, to_date)
 
 
-def get_from_to_date_1(data, loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
+def get_from_to_date_1(data, file_code: str, loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
     row, col = loc
 
     if source == 'cloud':
@@ -172,10 +174,10 @@ def get_from_to_date_1(data, loc: tuple[int, int] = (0, 0), source: str = 'cloud
         from_date = pd.to_datetime(date.split()[2])
         to_date = pd.to_datetime(date.split()[5])
 
-    validate_from_to_date(from_date, to_date)
+    validate_from_to_date(from_date, to_date, file_code)
 
 
-def get_from_to_date_2(data, from_loc: tuple[int, int] = (0, 0), to_loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
+def get_from_to_date_2(data, file_code: str, from_loc: tuple[int, int] = (0, 0), to_loc: tuple[int, int] = (0, 0), source: str = 'cloud'):
     from_row, from_col = from_loc
     to_row, to_col = to_loc
 
@@ -190,4 +192,4 @@ def get_from_to_date_2(data, from_loc: tuple[int, int] = (0, 0), to_loc: tuple[i
         from_date = pd.to_datetime(data.iloc[from_row, from_col])
         to_date = pd.to_datetime(data.iloc[to_row, to_col])
 
-    validate_from_to_date(from_date, to_date)
+    validate_from_to_date(from_date, to_date, file_code)
